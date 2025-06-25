@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "153963561564",
+    "project_id": "doctor-ai-61457",
+    "storage_bucket": "doctor-ai-61457.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:153963561564:android:8402d2240d33616ab61c99",
+        "android_client_info": {
+          "package_name": "com.example.dawini"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHZe3ZdWL7bncHz6pPKoM_THiPvnDUGdc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:153963561564:android:a23a2f4428dd0108b61c99",
+        "android_client_info": {
+          "package_name": "com.example.doctor_ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHZe3ZdWL7bncHz6pPKoM_THiPvnDUGdc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
