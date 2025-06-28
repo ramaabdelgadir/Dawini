@@ -1,115 +1,129 @@
-import 'package:dawini/doctor/models/doctor_auth_model.dart';
-import 'package:dawini/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dawini/theme/app_colors.dart';
+import '../models/doctor_auth_model.dart';
 
+/// High‑level controller: connects UI with DoctorAuthModel,
+/// translates Firebase errors ➜ Arabic, shows SnackBars, handles navigation.
 class DoctorAuthController {
-  final DoctorAuthModel _authModel = DoctorAuthModel();
+  final DoctorAuthModel _model = DoctorAuthModel();
 
-  Future<void> login(
-    String email,
-    String password,
-    BuildContext context,
-  ) async {
-    try {
-      await _authModel.login(email, password);
-      if (context.mounted) {
-        Navigator.pushReplacementNamed(
-          context,
-          'Dawini/Doctor/ProfileScreen',
-        ); // doctor profile page
-      }
-    } catch (e) {
-      if (context.mounted) {
-        _showError(
-          context,
-          '(Login failed) ${_formatFirebaseError(e.toString())}',
-        );
-      }
-    }
-  }
+  /* ─────────────────────────────── LOGIN ─────────────────────────────── */
 
-  Future<void> signUp(
-    String email,
-    String password,
-    String name,
-    BuildContext context,
-  ) async {
-    try {
-      await _authModel.signUp(email, password, name);
-      if (context.mounted) {
-        Navigator.pushReplacementNamed(context, 'Dawini/Doctor/Profile');
-      }
-    } catch (e) {
-      if (context.mounted) {
-        _showError(
-          context,
-          '(SignUp failed) ${_formatFirebaseError(e.toString())}',
-        );
-      }
-    }
-  }
-
-  Future<void> logout(BuildContext context) async {
-    try {
-      await _authModel.logOut();
-    } catch (e) {
-      if (context.mounted) {
-        _showError(context, '(Error) ${_formatFirebaseError(e.toString())}');
-      }
-    }
-  }
-
-  Future<String?> getDoctorName() async {
-    final doctorUID = FirebaseAuth.instance.currentUser!.uid;
-    return await _authModel.getDoctorName(doctorUID);
-  }
-
-  Future<void> updateProfile({
-    required String newName,
-    required String newSpecialization,
+  Future<void> login({
+    required String email,
+    required String password,
     required BuildContext context,
   }) async {
     try {
-      await _authModel.updateProfile(
-        newName: newName,
-        newSpecialization: newSpecialization,
+      await _model.login(email, password);
+      if (context.mounted) {
+        Navigator.pushReplacementNamed(context, 'Dawini/Doctor/Profile');
+      }
+    } on FirebaseAuthException catch (e) {
+      if (context.mounted) {
+        _showError(context, _translateError(e.code));
+      }
+    }
+  }
+
+  /* ────────────────────────────── SIGN UP ────────────────────────────── */
+
+  Future<void> signUp({
+    required String email,
+    required String password,
+    required String name,
+    required String phone,
+    required String address,
+    required String city,
+    required String specialization,
+    required String linkedinUrl,
+    required String facebookUrl,
+    required BuildContext context,
+  }) async {
+    try {
+      await _model.signUp(
+        email: email,
+        password: password,
+        name: name,
+        phone: phone,
+        address: address,
+        city: city,
+        specialization: specialization,
+        linkedinUrl: linkedinUrl,
+        facebookUrl: facebookUrl,
+      );
+      if (context.mounted) {
+        Navigator.pushReplacementNamed(context, 'Dawini/Doctor/Profile');
+      }
+    } on FirebaseAuthException catch (e) {
+      if (context.mounted) {
+        _showError(context, _translateError(e.code));
+      }
+    }
+  }
+
+  /* ─────────────────────────── LOG OUT ──────────────────────────────── */
+
+  Future<void> logout(BuildContext context) async {
+    try {
+      await _model.logOut();
+    } catch (e) {
+      if (context.mounted) _showError(context, 'حدث خطأ أثناء تسجيل الخروج');
+    }
+  }
+
+  /* ─────────────────────── UPDATE PROFILE ───────────────────────────── */
+
+  Future<void> updateProfile({
+    String? name,
+    String? specialization,
+    String? phone,
+    String? address,
+    String? city,
+    String? linkedinUrl,
+    String? facebookUrl,
+    required BuildContext context,
+  }) async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      await _model.updateProfile(
+        uid: uid,
+        name: name,
+        specialization: specialization,
+        phone: phone,
+        address: address,
+        city: city,
+        linkedinUrl: linkedinUrl,
+        facebookUrl: facebookUrl,
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully'),
+          SnackBar(
+            content: Text('تم تحديث الملف بنجاح'),
             backgroundColor: AppColors.plum,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 515, left: 20, right: 20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
-    } catch (e) {
+    } catch (_) {
       if (context.mounted) {
-        _showError(
-          context,
-          '(Error updating profile) ${_formatFirebaseError(e.toString())}',
-        );
+        _showError(context, 'لم يتم تحديث الملف – جرِّب مرة أخرى');
       }
     }
   }
 
-  Future<void> deleteAccount(BuildContext context) async {
-    try {
-      await _authModel.deleteAccount();
-    } catch (e) {
-      if (context.mounted) {
-        _showError(
-          context,
-          '(Error deleting account) ${_formatFirebaseError(e.toString())}',
-        );
-      }
-    }
-  }
+  /* ────────────────────────── UTILITIES ─────────────────────────────── */
 
+  /* ─── SnackBar helper ─── */
   void _showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message, textAlign: TextAlign.center),
         backgroundColor: AppColors.plum,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.only(bottom: 515, left: 20, right: 20),
@@ -117,10 +131,19 @@ class DoctorAuthController {
       ),
     );
   }
-}
 
-String _formatFirebaseError(String error) {
-  RegExp regex = RegExp(r'\[firebase_auth/([\w-]+)\]\s*(.+)');
-  Match? match = regex.firstMatch(error);
-  return match != null ? '${match.group(1)}: ${match.group(2)}' : error;
+  /* ─── Firebase error code ➜ Arabic message ─── */
+  String _translateError(String code) {
+    const map = <String, String>{
+      'invalid-email': 'تنسيق البريد الإلكتروني غير صالح',
+      'user-disabled': 'تم تعطيل هذا المستخدم',
+      'user-not-found': 'لا يوجد مستخدم بهذا البريد',
+      'wrong-password': 'كلمة المرور غير صحيحة',
+      'email-already-in-use': 'البريد مستخدم من قبل',
+      'weak-password': 'كلمة المرور ضعيفة – استخدم 6 أحرف فأكثر',
+      'too-many-requests': 'محاولات كثيرة. انتظر قليلاً',
+      'network-request-failed': 'تعذّر الاتصال بالإنترنت',
+    };
+    return map[code] ?? 'خطأ غير متوقع (${code})';
+  }
 }

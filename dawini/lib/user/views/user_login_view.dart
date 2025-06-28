@@ -9,7 +9,13 @@ class UserLoginView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
-      body: Padding(padding: const EdgeInsets.all(20.0), child: LoginForm()),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: const LoginForm(),
+        ),
+      ),
     );
   }
 }
@@ -41,17 +47,23 @@ class LoginFormState extends State<LoginForm> {
         const SizedBox(height: 40),
         TextFormField(
           controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+
           textInputAction: TextInputAction.next,
           decoration: InputDecoration(
-            hintText: 'Email',
+            hintText: 'البريد الإلكتروني ',
             filled: true,
             fillColor: AppColors.deepPurple,
-            hintStyle: const TextStyle(color: Color(0xFFB8B6B6)),
+            hintStyle: const TextStyle(
+              color: Color(0xFFB8B6B6),
+              fontFamily: 'Din',
+              fontSize: 17,
+            ),
             border: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(25)),
             ),
           ),
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white, fontFamily: 'Din'),
         ),
         const SizedBox(height: 20),
         TextFormField(
@@ -59,10 +71,14 @@ class LoginFormState extends State<LoginForm> {
           obscureText: !_isPasswordVisible,
           textInputAction: TextInputAction.next,
           decoration: InputDecoration(
-            hintText: 'Password',
+            hintText: 'كلمة المرور ',
             filled: true,
             fillColor: AppColors.deepPurple,
-            hintStyle: const TextStyle(color: Color(0xFFB8B6B6)),
+            hintStyle: const TextStyle(
+              color: Color(0xFFB8B6B6),
+              fontFamily: 'Din',
+              fontSize: 17,
+            ),
             border: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(25)),
             ),
@@ -77,7 +93,7 @@ class LoginFormState extends State<LoginForm> {
               },
             ),
           ),
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white, fontFamily: 'Din'),
         ),
         const SizedBox(height: 40),
         ElevatedButton(
@@ -96,44 +112,37 @@ class LoginFormState extends State<LoginForm> {
             );
           },
           child: const Text(
-            'LogIn',
+            'تسجيل الدخول',
             style: TextStyle(
               color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Cairo',
+              fontFamily: 'Jawadtaut',
+              fontSize: 17,
             ),
           ),
         ),
         const SizedBox(height: 20),
-
-        /* 
-            * future work 
-            // Forgot Password Text
-            TextButton(
-              onPressed: () {
-                // Handle Forgot Password 
-              },
-              child: const Text(
-                'Forgot password?',
-                style: TextStyle(color: Color(0xFFB8B6B6)),
-              ),
-            ), */
-
-        // Sign Up Text
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              "Not a member?",
-              style: TextStyle(color: Color(0xFFB8B6B6)),
+              "جديد في داويني؟",
+              style: TextStyle(
+                color: Color(0xFFB8B6B6),
+                fontSize: 16,
+                fontFamily: 'Jawadtaut',
+              ),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pushReplacementNamed(context, 'Dawini/User/Signup');
               },
               child: const Text(
-                'Signup now',
-                style: TextStyle(color: AppColors.berryPurple),
+                'سجل الآن',
+                style: TextStyle(
+                  color: AppColors.berryPurple,
+                  fontSize: 16,
+                  fontFamily: 'Jawadtaut',
+                ),
               ),
             ),
           ],

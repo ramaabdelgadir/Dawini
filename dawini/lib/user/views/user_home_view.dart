@@ -16,17 +16,38 @@ class UserOpenUpPage extends StatelessWidget {
             children: [
               Image.asset(
                 'assets/images/home.png',
-                width: screenW * 0.6,
+                width: screenW * 0.7,
                 height: screenH * 0.25,
               ),
-              const SizedBox(height: 10),
               const Text(
-                'Meet Doctor AI!',
+                'داويني',
                 style: TextStyle(
                   color: AppColors.orchidPink,
-                  fontSize: 35,
+                  fontSize: 30,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'Anton',
+                  fontFamily: 'TIDO',
+                  shadows: [
+                    Shadow(
+                      offset: Offset(2.0, 2.0),
+                      blurRadius: 5.0,
+                      color: AppColors.deepShadow,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                ' بداية طريقك للعلاج  ',
+                style: TextStyle(
+                  color: Color.fromARGB(
+                    255,
+                    175,
+                    110,
+                    188,
+                  ), //Color.fromARGB(255, 140, 88, 151)
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'YaModernPro',
                   shadows: [
                     Shadow(
                       offset: Offset(2.0, 2.0),
@@ -38,12 +59,12 @@ class UserOpenUpPage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               const Text(
-                'Describe your symptoms\nAnd let AI guide you\nTo the right care.',
+                ' من تحليل الأعراض  \nإلى اختيار الطبيب المناسب\n  معاك في كل خطوة',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppColors.berryPurple,
-                  fontSize: 23,
-                  fontFamily: 'Inter',
+                  fontSize: 24,
+                  fontFamily: 'Jawadtaut',
                   shadows: [
                     Shadow(
                       offset: Offset(2.0, 2.0),
@@ -53,7 +74,7 @@ class UserOpenUpPage extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 60),
+              const SizedBox(height: 65),
               Stack(
                 clipBehavior: Clip.none,
                 alignment: Alignment.center,
@@ -67,16 +88,19 @@ class UserOpenUpPage extends StatelessWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.plum,
-                      minimumSize: Size(screenW * 0.3, 65),
+                      minimumSize: Size(screenW * 0.6, 63),
                       elevation: 10,
                       shadowColor: AppColors.deepShadow,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
                     ),
                     child: const Text(
-                      'Let\'s Start Chatting ...',
+                      'ابدأ رحلتك مع داويني',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
-                        fontFamily: 'LuckiestGuy',
+                        fontSize: 16,
+                        fontFamily: 'YaModernPro',
                         shadows: [
                           Shadow(
                             offset: Offset(1.0, 1.0),

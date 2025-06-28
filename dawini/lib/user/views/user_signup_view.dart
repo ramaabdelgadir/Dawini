@@ -9,7 +9,13 @@ class UserSignUpView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
-      body: Padding(padding: const EdgeInsets.all(20.0), child: SignUpForm()),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: const SignUpForm(),
+        ),
+      ),
     );
   }
 }
@@ -31,116 +37,140 @@ class SignUpFormState extends State<SignUpForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const CircleAvatar(
-          radius: 50,
-          backgroundColor: AppColors.plum,
-          child: Icon(Icons.person, size: 70, color: Colors.white),
-        ),
-        const SizedBox(height: 40),
-        TextFormField(
-          controller: _nameController,
-          textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            hintText: 'Enter Your First Name',
-            filled: true,
-            fillColor: AppColors.deepPurple,
-            hintStyle: const TextStyle(color: Color(0xFFB8B6B6)),
-            border: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(25)),
-            ),
-          ),
-          style: const TextStyle(color: Colors.white),
-        ),
-        const SizedBox(height: 20),
-        TextFormField(
-          controller: _emailController,
-          textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            hintText: 'Email',
-            filled: true,
-            fillColor: AppColors.deepPurple,
-            hintStyle: const TextStyle(color: Color(0xFFB8B6B6)),
-            border: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(25)),
-            ),
-          ),
-          style: const TextStyle(color: Colors.white),
-        ),
-        const SizedBox(height: 20),
-        TextFormField(
-          controller: _passwordController,
-          obscureText: !_isPasswordVisible,
-          textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            hintText: 'Password',
-            filled: true,
-            fillColor: AppColors.deepPurple,
-            hintStyle: const TextStyle(color: Color(0xFFB8B6B6)),
-            border: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(25)),
-            ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-              ),
-              onPressed: () {
-                setState(() {
-                  _isPasswordVisible = !_isPasswordVisible;
-                });
-              },
-            ),
-          ),
-          style: const TextStyle(color: Colors.white),
-        ),
-        const SizedBox(height: 40),
-        ElevatedButton(
-          onPressed: () {
-            _authController.signUp(
-              _emailController.text,
-              _passwordController.text,
-              _nameController.text,
-              context,
-            );
-          },
-          style: ElevatedButton.styleFrom(
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 150),
+          const CircleAvatar(
+            radius: 50,
             backgroundColor: AppColors.plum,
-            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(25),
-            ),
+            child: Icon(Icons.person, size: 70, color: Colors.white),
           ),
-          child: const Text(
-            'SignUp',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Cairo',
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              "Already a member?",
-              style: TextStyle(color: Color(0xFFB8B6B6)),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, 'Dawini/User/Login');
-              },
-              child: const Text(
-                'Login',
-                style: TextStyle(color: AppColors.berryPurple),
+          const SizedBox(height: 40),
+          TextFormField(
+            controller: _nameController,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              hintText: 'الاسم الاول',
+              filled: true,
+              fillColor: AppColors.deepPurple,
+              hintStyle: TextStyle(
+                color: Color(0xFFB8B6B6),
+                fontFamily: 'Din',
+                fontSize: 17,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(25)),
               ),
             ),
-          ],
-        ),
-      ],
+            style: TextStyle(color: Colors.white, fontFamily: 'Din'),
+          ),
+          const SizedBox(height: 20),
+          TextFormField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              hintText: 'البريد الإلكتروني',
+              filled: true,
+              fillColor: AppColors.deepPurple,
+              hintStyle: TextStyle(
+                color: Color(0xFFB8B6B6),
+                fontFamily: 'Din',
+                fontSize: 17,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(25)),
+              ),
+            ),
+            style: TextStyle(color: Colors.white, fontFamily: 'Din'),
+          ),
+          const SizedBox(height: 20),
+          TextFormField(
+            controller: _passwordController,
+            obscureText: !_isPasswordVisible,
+            textInputAction: TextInputAction.done,
+            decoration: InputDecoration(
+              hintText: 'كلمة المرور',
+              filled: true,
+              fillColor: AppColors.deepPurple,
+              hintStyle: const TextStyle(
+                color: Color(0xFFB8B6B6),
+                fontFamily: 'Din',
+                fontSize: 17,
+              ),
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(25)),
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+              ),
+            ),
+            style: const TextStyle(color: Colors.white, fontFamily: 'Din'),
+          ),
+          const SizedBox(height: 40),
+          ElevatedButton(
+            onPressed: () {
+              _authController.signUp(
+                _emailController.text,
+                _passwordController.text,
+                _nameController.text,
+                context,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.plum,
+              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(25),
+              ),
+            ),
+            child: const Text(
+              'إنشاء حساب',
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'Jawadtaut',
+                fontSize: 17,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                "عندك حساب في داويني؟",
+                style: TextStyle(
+                  color: Color(0xFFB8B6B6),
+                  fontSize: 16,
+                  fontFamily: 'Jawadtaut',
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacementNamed(context, 'Dawini/User/Login');
+                },
+                child: const Text(
+                  'سجل دخولك',
+                  style: TextStyle(
+                    color: AppColors.berryPurple,
+                    fontSize: 16,
+                    fontFamily: 'Jawadtaut',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

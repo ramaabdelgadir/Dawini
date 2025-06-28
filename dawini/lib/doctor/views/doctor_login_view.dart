@@ -9,7 +9,13 @@ class DoctorLoginView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
-      body: Padding(padding: const EdgeInsets.all(20.0), child: LoginForm()),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: const LoginForm(),
+        ),
+      ),
     );
   }
 }
@@ -28,6 +34,35 @@ class LoginFormState extends State<LoginForm> {
 
   bool _isPasswordVisible = false;
 
+  void _attemptLogin() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'يرجى إدخال البريد الإلكتروني وكلمة المرور',
+            textDirection: TextDirection.rtl,
+          ),
+          backgroundColor: AppColors.plum,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(bottom: 515, left: 20, right: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      return;
+    }
+
+    _authController.login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      context: context,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -39,30 +74,44 @@ class LoginFormState extends State<LoginForm> {
           child: Icon(Icons.medical_services, size: 70, color: Colors.white),
         ),
         const SizedBox(height: 40),
+
+        // البريد الإلكتروني
         TextFormField(
           controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            hintText: 'Email',
+          decoration: const InputDecoration(
+            hintText: 'البريد الإلكتروني',
             filled: true,
             fillColor: AppColors.deepPurple,
-            hintStyle: const TextStyle(color: Color(0xFFB8B6B6)),
-            border: const OutlineInputBorder(
+            hintStyle: TextStyle(
+              color: Color(0xFFB8B6B6),
+              fontFamily: 'Din',
+              fontSize: 17,
+            ),
+            border: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(25)),
             ),
           ),
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white, fontFamily: 'Din'),
         ),
         const SizedBox(height: 20),
+
+        // كلمة المرور
         TextFormField(
           controller: _passwordController,
           obscureText: !_isPasswordVisible,
-          textInputAction: TextInputAction.next,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => _attemptLogin(),
           decoration: InputDecoration(
-            hintText: 'Password',
+            hintText: 'كلمة المرور',
             filled: true,
             fillColor: AppColors.deepPurple,
-            hintStyle: const TextStyle(color: Color(0xFFB8B6B6)),
+            hintStyle: const TextStyle(
+              color: Color(0xFFB8B6B6),
+              fontFamily: 'Din',
+              fontSize: 17,
+            ),
             border: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(25)),
             ),
@@ -70,17 +119,19 @@ class LoginFormState extends State<LoginForm> {
               icon: Icon(
                 _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
               ),
-              onPressed: () {
-                setState(() {
-                  _isPasswordVisible = !_isPasswordVisible;
-                });
-              },
+              onPressed:
+                  () => setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  }),
             ),
           ),
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white, fontFamily: 'Din'),
         ),
         const SizedBox(height: 40),
+
+        // زر الدخول
         ElevatedButton(
+          onPressed: _attemptLogin,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.plum,
             padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
@@ -88,52 +139,40 @@ class LoginFormState extends State<LoginForm> {
               borderRadius: BorderRadius.circular(25),
             ),
           ),
-          onPressed: () {
-            _authController.login(
-              _emailController.text,
-              _passwordController.text,
-              context,
-            );
-          },
           child: const Text(
-            'LogIn',
+            'تسجيل الدخول',
             style: TextStyle(
               color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Cairo',
+              fontFamily: 'Jawadtaut',
+              fontSize: 17,
             ),
           ),
         ),
         const SizedBox(height: 20),
 
-        /* 
-            * future work 
-            // Forgot Password Text
-            TextButton(
-              onPressed: () {
-                // Handle Forgot Password 
-              },
-              child: const Text(
-                'Forgot password?',
-                style: TextStyle(color: Color(0xFFB8B6B6)),
-              ),
-            ), */
-
-        // Sign Up Text
+        // نص التحويل للتسجيل
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              "Not a member?",
-              style: TextStyle(color: Color(0xFFB8B6B6)),
+              'جديد في داويني؟',
+              style: TextStyle(
+                color: Color(0xFFB8B6B6),
+                fontSize: 16,
+                fontFamily: 'Jawadtaut',
+              ),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pushReplacementNamed(context, 'Dawini/Doctor/Signup');
               },
               child: const Text(
-                'Signup now',
-                style: TextStyle(color: AppColors.berryPurple),
+                'أنشئ ملفك',
+                style: TextStyle(
+                  color: AppColors.berryPurple,
+                  fontSize: 16,
+                  fontFamily: 'Jawadtaut',
+                ),
               ),
             ),
           ],

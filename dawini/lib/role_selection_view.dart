@@ -18,11 +18,12 @@ class RoleSelectionView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
-                  "Who are you?",
+                  "جاهز نبدأ؟",
                   style: TextStyle(
-                    fontSize: 30,
-                    fontFamily: 'Anton',
+                    fontSize: 50,
+                    fontFamily: 'YaModernPro',
                     color: AppColors.orchidPink,
+                    //fontWeight: FontWeight.bold,
                     shadows: [
                       Shadow(
                         offset: Offset(2, 2),
@@ -32,60 +33,66 @@ class RoleSelectionView extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 5),
                 const Text(
-                  "Choose your role to get started",
+                  "حدد نوع حسابك للمتابعة",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 18,
-                    fontFamily: 'Inter',
+                    fontSize: 21.5,
+                    fontFamily: 'Jawadtaut',
                     color: AppColors.berryPurple,
                   ),
                 ),
-                const SizedBox(height: 40),
-                ElevatedButton.icon(
-                  onPressed:
-                      () => {Navigator.pushNamed(context, 'Dawini/User')},
-                  icon: const Icon(Icons.person, size: 28),
-                  label: const Text(
-                    "I’m a User",
-                    style: TextStyle(fontSize: 19, fontFamily: 'Anton'),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.berryPurple,
-                    foregroundColor: Colors.white,
-                    elevation: 10,
-                    shadowColor: AppColors.deepShadow,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 15,
-                      horizontal: 30,
+                const SizedBox(height: 33),
+                Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: ElevatedButton.icon(
+                    onPressed:
+                        () => Navigator.pushNamed(context, 'Dawini/User'),
+                    icon: const Icon(Icons.person, size: 29),
+                    label: const Text(
+                      "استشارة طبية",
+                      style: TextStyle(fontSize: 24, fontFamily: 'Jawadtaut'),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.berryPurple,
+                      foregroundColor: Colors.white,
+                      elevation: 10,
+                      shadowColor: AppColors.deepShadow,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 15,
+                        horizontal: 30,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed:
-                      () => {Navigator.pushNamed(context, 'Dawini/Doctor')},
-                  icon: const Icon(Icons.medical_services, size: 28),
-                  label: const Text(
-                    "I’m a Doctor",
-                    style: TextStyle(fontSize: 18, fontFamily: 'Anton'),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.softLilac,
-                    foregroundColor: AppColors.berryPurple,
-                    elevation: 10,
-                    shadowColor: AppColors.deepShadow,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 15,
-                      horizontal: 30,
+                Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: ElevatedButton.icon(
+                    onPressed:
+                        () => Navigator.pushNamed(context, 'Dawini/Doctor'),
+                    icon: const Icon(Icons.medical_services, size: 28),
+                    label: const Text(
+                      "طبيب",
+                      style: TextStyle(fontSize: 26, fontFamily: 'Jawadtaut'),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                      side: const BorderSide(color: AppColors.berryPurple),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.softLilac,
+                      foregroundColor: AppColors.berryPurple,
+                      elevation: 10,
+                      shadowColor: AppColors.deepShadow,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 15,
+                        horizontal: 40,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        side: const BorderSide(color: AppColors.berryPurple),
+                      ),
                     ),
                   ),
                 ),
@@ -97,3 +104,13 @@ class RoleSelectionView extends StatelessWidget {
     );
   }
 }
+  // void _navigateTo(String routeName) async {
+  //   setState(() => _isLoading = true);
+
+  //   await Future.delayed(const Duration(milliseconds: 700)); 
+
+  //   if (mounted) {
+  //     setState(() => _isLoading = false);
+  //     Navigator.pushNamed(context, routeName);
+  //   }
+  // }

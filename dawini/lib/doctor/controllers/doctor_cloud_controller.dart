@@ -11,6 +11,10 @@ class DoctorCloudController {
     await _firestore.collection(collection).doc(doctor.uid).set(doctor.toMap());
   }
 
+  Future<void> deleteDoctorData(String uid) async {
+    await _firestore.collection(collection).doc(uid).delete();
+  }
+
   Future<DoctorCloudModel?> getDoctorData(String uid) async {
     final doc = await _firestore.collection(collection).doc(uid).get();
     if (doc.exists) {

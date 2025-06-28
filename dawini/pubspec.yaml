@@ -47,7 +47,7 @@ dev_dependencies:
   rename: ^3.1.0  
   flutter_launcher_icons: ^0.14.4
 flutter_icons:
-  image_path: "assets/images/dawini.jpg"
+  image_path: "assets/images/dawini.png"
   android: true
   ios: true
 
@@ -74,38 +74,62 @@ flutter:
 
   # Add custom fonts.
   fonts:
-    - family: Anton
+  # Arabic fonts
+    - family: Takeaway #<lets start
       fonts:
-        - asset: assets/fonts/Anton-Regular.ttf
-
-    - family: Arimo
+        - asset: assets/fonts/Takeaway-Combo.otf
+   
+    - family: YaModernPro 
       fonts:
-        - asset: assets/fonts/Arimo-VariableFont_wght.ttf
+        - asset: assets/fonts/Ya-ModernPro-Bold.otf
 
-    - family: Cairo
+    - family: Scheherazade #
       fonts:
-        - asset: assets/fonts/Cairo-Regular.ttf
+        - asset: assets/fonts/ScheherazadeNew-Medium.ttf  
 
-    - family: Chewy
+    - family: AllGenders-Light
       fonts:
-        - asset: assets/fonts/Chewy-Regular.ttf
+        - asset: assets/fonts/All-Genders-Light-v4.otf
 
-    - family: Inter
+    - family: AllGenders-Bold
       fonts:
-        - asset: assets/fonts/Inter_18pt-Regular.ttf
+        - asset: assets/fonts/All-Genders-Bold-v4.otf 
 
-    - family: Kanit
+    - family: TIDO #<lets start 
       fonts:
-        - asset: assets/fonts/Kanit-Regular.ttf
+        - asset: assets/fonts/TIDO-B.otf
 
-    - family: Lalezar
+    - family: RTL #<profile
       fonts:
-        - asset: assets/fonts/Lalezar-Regular.ttf
+        - asset: assets/fonts/RTL-Saudi-Bold.ttf 
 
-    - family: LuckiestGuy
+    - family: Jawadtaut
       fonts:
-        - asset: assets/fonts/LuckiestGuy-Regular.ttf
+        - asset: assets/fonts/Jawadtaut-1.otf  
 
+    - family: Cooper #<lets start 
+      fonts:
+        - asset: assets/fonts/CooperArabic.ttf
+
+    -  family: Marhey #<lets start 
+       fonts:
+        - asset: assets/fonts/Marhey-Bold.ttf  
+
+    - family: OMNES #<profile
+      fonts:
+        - asset: assets/fonts/OMNES-ARABIC-BLACK.ttf
+
+    - family: Watad
+      fonts:
+        - asset: assets/fonts/Watad-Regular.otf
+
+    - family: Din
+      fonts:
+        - asset: assets/fonts/Din-Regular.ttf
+
+    - family: Roman
+      fonts:
+        - asset: assets/fonts/Roman.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

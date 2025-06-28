@@ -21,7 +21,9 @@ class ChatViewState extends State<ChatView> {
   final ChatHistoryController _chatHistoryController = ChatHistoryController();
   final UserAuthController _authController = UserAuthController();
   bool _isChatInitialized = false;
+  bool _isWaiting = false;
   String _username = "User";
+
   @override
   void initState() {
     super.initState();
@@ -30,14 +32,10 @@ class ChatViewState extends State<ChatView> {
   }
 
   Future<void> _initChat() async {
-    print("Initializing chat...");
     if (widget.chatID == null) {
-      print("ChatID is null, creating new chat.");
       String newChatID = await _controller.initializeChat();
-      print("New chat initialized with ID: $newChatID");
       _chatHistoryController.getCurrentChatID(newChatID);
     } else {
-      print("Using existing ChatID: ${widget.chatID}");
       _controller.setCurrentChatID(widget.chatID!);
       _chatHistoryController.getCurrentChatID(widget.chatID!);
     }
@@ -47,7 +45,6 @@ class ChatViewState extends State<ChatView> {
     });
   }
 
-  /// Load the user's name from Firestore via ChatController.
   Future<void> _loadUserName() async {
     String? name = await _authController.getUserName();
     if (name != null && name.isNotEmpty) {
@@ -64,8 +61,16 @@ class ChatViewState extends State<ChatView> {
     await _controller.addMessage(userMessage, "User");
     _messageController.clear();
 
+    setState(() {
+      _isWaiting = true;
+    });
+
     String aiResponse = await _controller.getAIResponse(userMessage);
     await _controller.addMessage(aiResponse, "AI");
+
+    setState(() {
+      _isWaiting = false;
+    });
   }
 
   @override
@@ -81,200 +86,247 @@ class ChatViewState extends State<ChatView> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Builder(
-          builder: (context) {
-            return IconButton(
-              icon: const Icon(Icons.menu, color: Colors.white),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            );
-          },
-        ),
-        actions: [
-          Image.asset('assets/images/f.png', scale: 2.9),
-          TextButton(
-            onPressed: () {
-              //TODO: add page for the app description and information
-              //Navigator.pushReplacementNamed(context, 'DoctorAI/');
-            },
-            child: const Text(
-              'Doctor AI',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-                fontFamily: 'Anton',
-              ),
-            ),
-          ),
-          const SizedBox(width: 50),
-          IconButton(
-            icon: const Icon(Icons.add, color: Colors.white),
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, 'Dawini/User/ChatScreen');
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.person, color: Colors.white),
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, 'Dawini/User/Profile');
-            },
-          ),
-        ],
-      ),
-      drawer: const ChatHistoryView(),
-      body: Stack(
-        children: [
-          StreamBuilder<QuerySnapshot>(
-            stream: _controller.getMessages(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Animated greeting text using the username.
-                      AnimatedTextKit(
-                        animatedTexts: [
-                          TypewriterAnimatedText(
-                            'welcome, $_username..',
-                            textStyle: const TextStyle(
-                              color: AppColors.softLilac,
-                              fontSize: 30,
-                              fontFamily: 'Kanit',
-                              //fontWeight: FontWeight.bold,
-                              shadows: [
-                                Shadow(
-                                  offset: Offset(2.0, 2.0),
-                                  blurRadius: 5.0,
-                                  color: Colors.black45,
-                                ),
-                              ],
-                            ),
-                            speed: const Duration(milliseconds: 50),
-                            cursor: '',
-                          ),
-                          TypewriterAnimatedText(
-                            'Your AI health partner\n    is ready to help!',
-                            textStyle: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Kanit',
-                              shadows: [
-                                Shadow(
-                                  offset: Offset(2.0, 2.0),
-                                  blurRadius: 5.0,
-                                  color: Colors.black45,
-                                ),
-                              ],
-                            ),
-                            speed: const Duration(milliseconds: 25),
-                            cursor: '',
-                          ),
-                        ],
-                        totalRepeatCount: 1,
-                        pause: const Duration(milliseconds: 400),
-                        displayFullTextOnTap: true,
-                        stopPauseOnTap: true,
-                      ),
-                      const SizedBox(height: 10),
-                      Image.asset('assets/images/c.gif', height: 180),
-                    ],
-                  ),
-                );
-              }
-              List<QueryDocumentSnapshot> docs = snapshot.data!.docs;
-              return ListView.builder(
-                padding: const EdgeInsets.only(bottom: 100),
-                itemCount: docs.length,
-                itemBuilder: (context, index) {
-                  var data = docs[index].data() as Map<String, dynamic>;
-                  String sender = data['sender'] ?? 'Unknown';
-                  String text = data['text'] ?? '';
-                  Color bgColor =
-                      sender == "User"
-                          ? AppColors.deepPurple
-                          : AppColors.darkPlum;
-                  return Align(
-                    alignment:
-                        sender == "User"
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 15,
-                      ),
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: bgColor,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        text,
-                        textDirection:
-                            TextDirection
-                                .rtl, // 👈 This makes it display right-to-left
-                        textAlign:
-                            TextAlign
-                                .right, // 👈 Optional: aligns text to the right
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  );
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Builder(
+            builder: (context) {
+              return IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
                 },
               );
             },
           ),
-          Positioned(
-            bottom: 30,
-            left: 20,
-            right: 20,
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.deepPurple,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color.fromARGB(100, 0, 0, 0),
-                    blurRadius: 8,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: TextField(
-                        controller: _messageController,
-                        decoration: const InputDecoration(
-                          hintText: 'Type something...',
-                          hintStyle: TextStyle(color: Colors.grey),
-                          border: InputBorder.none,
-                        ),
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.send, color: Colors.white),
-                    onPressed: _sendMessage,
-                  ),
-                ],
+          actions: [
+            Image.asset('assets/images/Dawinii.png', height: 33, width: 33),
+            TextButton(
+              onPressed: () {},
+              child: const Text(
+                'داويني',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontFamily: 'YaModernPro',
+                ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 50),
+            IconButton(
+              icon: const Icon(Icons.add, color: Colors.white),
+              onPressed: () {
+                Navigator.pushReplacementNamed(
+                  context,
+                  'Dawini/User/ChatScreen',
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.person, color: Colors.white),
+              onPressed: () {
+                Navigator.pushReplacementNamed(context, 'Dawini/User/Profile');
+              },
+            ),
+            const SizedBox(width: 5),
+          ],
+        ),
+        drawer: const ChatHistoryView(),
+        body: Stack(
+          children: [
+            StreamBuilder<QuerySnapshot>(
+              stream: _controller.getMessages(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AnimatedTextKit(
+                          animatedTexts: [
+                            TypewriterAnimatedText(
+                              'مرحباً، $_username ..',
+                              textStyle: const TextStyle(
+                                color: AppColors.softLilac,
+                                fontSize: 30,
+                                fontFamily: 'Kanit',
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(2.0, 2.0),
+                                    blurRadius: 5.0,
+                                    color: Colors.black45,
+                                  ),
+                                ],
+                              ),
+                              speed: Duration(milliseconds: 50),
+                              cursor: '',
+                            ),
+                            TypewriterAnimatedText(
+                              'شريكك الصحي الذكي\n     جاهز لمساعدتك!',
+                              textStyle: TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Kanit',
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(2.0, 2.0),
+                                    blurRadius: 5.0,
+                                    color: Colors.black45,
+                                  ),
+                                ],
+                              ),
+                              speed: Duration(milliseconds: 25),
+                              cursor: '',
+                            ),
+                          ],
+                          totalRepeatCount: 1,
+                          pause: Duration(milliseconds: 400),
+                          displayFullTextOnTap: true,
+                          stopPauseOnTap: true,
+                        ),
+                        const SizedBox(height: 10),
+                        Image.asset('assets/images/c.gif', height: 180),
+                      ],
+                    ),
+                  );
+                }
+
+                List<QueryDocumentSnapshot> docs = snapshot.data!.docs;
+                return Column(
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.only(bottom: 100, top: 20),
+                        itemCount: docs.length + (_isWaiting ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (_isWaiting && index == docs.length) {
+                            return Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                  horizontal: 15,
+                                ),
+                                child: Image.asset(
+                                  'assets/images/loading.gif',
+                                  height: 60,
+                                ),
+                              ),
+                            );
+                          }
+
+                          var data = docs[index].data() as Map<String, dynamic>;
+                          String sender = data['sender'] ?? 'Unknown';
+                          String text = data['text'] ?? '';
+                          Color bgColor =
+                              sender == "User"
+                                  ? AppColors.deepPurple
+                                  : AppColors.darkPlum;
+
+                          return Align(
+                            alignment:
+                                sender == "User"
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(
+                                vertical: 10,
+                                horizontal: 15,
+                              ),
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: bgColor,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                text,
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontFamily: 'Din',
+                                  shadows: [
+                                    Shadow(
+                                      offset: Offset(0.5, 0.5),
+                                      blurRadius: 0.5,
+                                      color: Color.fromARGB(22, 0, 0, 0),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            Positioned(
+              bottom: 30,
+              left: 20,
+              right: 20,
+              child: Container(
+                padding: const EdgeInsets.all(1.5),
+                decoration: BoxDecoration(
+                  color: AppColors.deepPurple,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x63000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: TextField(
+                          controller: _messageController,
+                          keyboardType: TextInputType.text,
+                          textCapitalization: TextCapitalization.sentences,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _sendMessage(),
+                          decoration: const InputDecoration(
+                            hintText: 'بماذا تشعر؟',
+                            hintStyle: TextStyle(
+                              color: Color.fromARGB(167, 158, 158, 158),
+                              fontFamily: 'Din',
+                            ),
+                            border: InputBorder.none,
+                          ),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Din',
+                          ),
+                          maxLines: null,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.arrow_circle_up_rounded,
+                        color: Colors.white,
+                      ),
+                      onPressed: _sendMessage,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

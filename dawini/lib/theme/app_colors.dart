@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color deepPurple = Color(0xFF684370);
+  static const Color deepPurple = Color(0xFF693D72);
   static const Color darkPlum = Color(0xFF39253d);
   static const Color softLilac = Color(0xFFE3E1E5);
   static const Color orchidPink = Color(0xFFbb75c9);
