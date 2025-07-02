@@ -7,7 +7,7 @@ class CloudController extends ChangeNotifier {
   final UserCloudModel _userCloudModel = UserCloudModel();
   String? _currentChatID;
   String? get currentChatID => _currentChatID;
-
+  String get userID => FirebaseAuth.instance.currentUser!.uid;
   void setCurrentChatID(String chatID) {
     _currentChatID = chatID;
     notifyListeners();

@@ -1,5 +1,9 @@
+import 'package:dawini/doctor/debug_screen.dart';
+import 'package:dawini/doctor/views/patiant_reports_view.dart';
 import 'package:dawini/theme/app_colors.dart';
 import 'package:dawini/role_selection_view.dart';
+import 'package:dawini/user/views/recomended_doctors_views.dart';
+import 'package:dawini/user/views/medical_form_view.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -53,6 +57,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(scaffoldBackgroundColor: AppColors.darkBackground),
       initialRoute: 'Dawini',
       routes: {
+        'debug': (context) => const ImportDoctorsDebugScreen(),
         'Dawini': (context) => const RoleSelectionView(),
         'Dawini/User': (context) => const UserOpenUpPage(),
         'Dawini/User/Login': (context) => const UserLoginView(),
@@ -61,11 +66,14 @@ class MyApp extends StatelessWidget {
           final args = ModalRoute.of(context)?.settings.arguments as String?;
           return ChatView(chatID: args);
         },
+        'Dawini/User/MedicalForm': (context) => const MedicalFormView(),
+        'Dawini/User/RecommendedDoctors': (context) => RecommendedDoctorsView(),
         'Dawini/User/Profile': (context) => const UserProfileView(),
         'Dawini/Doctor': (context) => const DoctorHomeView(),
         'Dawini/Doctor/Login': (context) => const DoctorLoginView(),
         'Dawini/Doctor/Signup': (context) => const DoctorSignUpView(),
         'Dawini/Doctor/Profile': (context) => const DoctorProfileView(),
+        'Dawini/Doctor/PatientReports': (context) => const PatientReportsView(),
       },
     );
   }

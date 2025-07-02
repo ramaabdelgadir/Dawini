@@ -1,7 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dawini/doctor/controllers/doctor_auth_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:dawini/doctor/models/doctor_cloud_model.dart';
-import 'package:dawini/doctor/controllers/doctor_cloud_controller.dart';
 import 'package:dawini/theme/app_colors.dart';
 
 class DoctorSignUpView extends StatefulWidget {
@@ -12,33 +10,31 @@ class DoctorSignUpView extends StatefulWidget {
 }
 
 class _DoctorSignUpViewState extends State<DoctorSignUpView> {
-  final _auth = FirebaseAuth.instance;
-  final DoctorCloudController _cloudController = DoctorCloudController();
+  final DoctorAuthController _authContr = DoctorAuthController();
 
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _specializationController =
-      TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _cityController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _linkedinController = TextEditingController();
-  final TextEditingController _facebookController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _name = TextEditingController();
+  final TextEditingController _specialization = TextEditingController();
+  final TextEditingController _address = TextEditingController();
+  final TextEditingController _city = TextEditingController();
+  final TextEditingController _phone = TextEditingController();
+  final TextEditingController _linkedin = TextEditingController();
+  final TextEditingController _facebook = TextEditingController();
+  final TextEditingController _email = TextEditingController();
+  final TextEditingController _password = TextEditingController();
 
-  bool _isPasswordVisible = false;
-  bool _isLoading = false;
+  bool _showPass = false;
+  bool _loading = false;
 
-  void _signUpDoctor() async {
-    if (_nameController.text.trim().isEmpty ||
-        _specializationController.text.trim().isEmpty ||
-        _addressController.text.trim().isEmpty ||
-        _cityController.text.trim().isEmpty ||
-        _phoneController.text.trim().isEmpty ||
-        _linkedinController.text.trim().isEmpty ||
-        _facebookController.text.trim().isEmpty ||
-        _emailController.text.trim().isEmpty ||
-        _passwordController.text.trim().isEmpty) {
+  void _signUp() async {
+    if (_name.text.isEmpty ||
+        _specialization.text.isEmpty ||
+        _address.text.isEmpty ||
+        _city.text.isEmpty ||
+        _phone.text.isEmpty ||
+        _linkedin.text.isEmpty ||
+        _facebook.text.isEmpty ||
+        _email.text.isEmpty ||
+        _password.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -47,7 +43,7 @@ class _DoctorSignUpViewState extends State<DoctorSignUpView> {
           ),
           backgroundColor: AppColors.plum,
           behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.only(bottom: 515, left: 20, right: 20),
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -56,57 +52,35 @@ class _DoctorSignUpViewState extends State<DoctorSignUpView> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() => _loading = true);
+
     try {
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      await _authContr.signUp(
+        email: _email.text,
+        password: _password.text,
+        name: _name.text,
+        phone: _phone.text,
+        address: _address.text,
+        city: _city.text,
+        specialization: _specialization.text,
+        linkedinUrl: _linkedin.text,
+        context: context,
       );
-
-      final uid = credential.user!.uid;
-      final doctor = DoctorCloudModel(
-        uid: uid,
-        name: _nameController.text.trim(),
-        specialization: _specializationController.text.trim(),
-        address: _addressController.text.trim(),
-        city: _cityController.text.trim(),
-        phone: _phoneController.text.trim(),
-        email: _emailController.text.trim(),
-        linkedinUrl: _linkedinController.text.trim(),
-        facebookUrl: _facebookController.text.trim(),
-      );
-
-      await _cloudController.saveDoctorData(doctor);
-      Navigator.pushReplacementNamed(context, 'Dawini/Doctor/Profile');
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('فشل التسجيل: ${e.toString()}')));
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('فشل التسجيل: $e'),
+          backgroundColor: AppColors.plum,
 
-  Widget _header(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 24.0, bottom: 6.0),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: AppColors.berryPurple,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          fontFamily: 'Jawadtaut',
-          shadows: [
-            Shadow(
-              offset: Offset(1.0, 1.0),
-              blurRadius: 5.0,
-              color: AppColors.deepShadow,
-            ),
-          ],
+          margin: const EdgeInsets.only(bottom: 700, left: 20, right: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
-      ),
-    );
+      );
+    } finally {
+      setState(() => _loading = false);
+    }
   }
 
   Widget _field({
@@ -116,11 +90,11 @@ class _DoctorSignUpViewState extends State<DoctorSignUpView> {
     bool pass = false,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextField(
         controller: c,
         keyboardType: type,
-        obscureText: pass ? !_isPasswordVisible : false,
+        obscureText: pass && !_showPass,
         decoration: InputDecoration(
           hintText: hint,
           filled: true,
@@ -137,14 +111,9 @@ class _DoctorSignUpViewState extends State<DoctorSignUpView> {
               pass
                   ? IconButton(
                     icon: Icon(
-                      _isPasswordVisible
-                          ? Icons.visibility_off
-                          : Icons.visibility,
+                      _showPass ? Icons.visibility_off : Icons.visibility,
                     ),
-                    onPressed:
-                        () => setState(
-                          () => _isPasswordVisible = !_isPasswordVisible,
-                        ),
+                    onPressed: () => setState(() => _showPass = !_showPass),
                   )
                   : null,
         ),
@@ -155,119 +124,160 @@ class _DoctorSignUpViewState extends State<DoctorSignUpView> {
 
   @override
   Widget build(BuildContext context) {
-    final screenW = MediaQuery.of(context).size.width;
+    final w = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  const CircleAvatar(
-                    radius: 50,
-                    backgroundColor: AppColors.plum,
-                    child: Icon(
-                      Icons.medical_services,
-                      size: 70,
-                      color: Colors.white,
-                    ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                const CircleAvatar(
+                  radius: 50,
+                  backgroundColor: AppColors.plum,
+                  child: Icon(
+                    Icons.medical_services,
+                    size: 70,
+                    color: Colors.white,
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'إنشاء ملف الطبيب',
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'إنشاء ملف الطبيب',
+                  style: TextStyle(
+                    color: AppColors.orchidPink,
+                    fontSize: 27,
+                    fontFamily: 'Jawadtaut',
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '  المعلومات الشخصية',
                     style: TextStyle(
-                      color: AppColors.orchidPink,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                      color: AppColors.berryPurple,
+                      fontSize: 25,
                       fontFamily: 'Jawadtaut',
                     ),
                   ),
-
-                  _header('البيانات الشخصية'),
-                  _field(c: _nameController, hint: 'الاسم الكامل'),
-                  _field(c: _specializationController, hint: 'التخصص'),
-                  _field(c: _addressController, hint: 'العنوان الكامل'),
-                  _field(c: _cityController, hint: 'المدينة'),
-
-                  _header('بيانات الاتصال'),
-                  _field(c: _phoneController, hint: 'رقم الهاتف'),
-                  _field(c: _emailController, hint: 'البريد الإلكتروني'),
-                  _field(
-                    c: _passwordController,
-                    hint: 'كلمة المرور',
-                    pass: true,
-                  ),
-
-                  _header('روابط السوشيال ميديا'),
-                  _field(c: _linkedinController, hint: 'رابط حساب لينكدإن'),
-                  _field(c: _facebookController, hint: 'رابط حساب فيسبوك'),
-
-                  const SizedBox(height: 30),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _signUpDoctor,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.plum,
-                      minimumSize: Size(screenW * 0.6, 55),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      elevation: 10,
+                ),
+                const SizedBox(height: 10),
+                _field(c: _name, hint: 'الاسم الكامل'),
+                _field(c: _specialization, hint: 'التخصص'),
+                const Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '  معلومات العنوان',
+                    style: TextStyle(
+                      color: AppColors.berryPurple,
+                      fontSize: 25,
+                      fontFamily: 'Jawadtaut',
                     ),
-                    child:
-                        _isLoading
-                            ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                            : const Text(
-                              'إنشاء الملف',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Jawadtaut',
-                              ),
-                            ),
                   ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'عندك حساب في داويني؟',
+                ),
+                const SizedBox(height: 10),
+                _field(c: _address, hint: 'العنوان الكامل'),
+                _field(c: _city, hint: 'المدينة'),
+                const Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '  بيانات الاتصال',
+                    style: TextStyle(
+                      color: AppColors.berryPurple,
+                      fontSize: 25,
+                      fontFamily: 'Jawadtaut',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _field(
+                  c: _phone,
+                  hint: 'رقم الهاتف',
+                  type: TextInputType.phone,
+                ),
+                _field(
+                  c: _email,
+                  hint: 'البريد الإلكتروني',
+                  type: TextInputType.emailAddress,
+                ),
+                _field(c: _password, hint: 'كلمة المرور', pass: true),
+                const Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '  الروابط المهنية',
+                    style: TextStyle(
+                      color: AppColors.berryPurple,
+                      fontSize: 25,
+                      fontFamily: 'Jawadtaut',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _field(c: _linkedin, hint: 'رابط لينكدإن'),
+                _field(c: _facebook, hint: 'رابط فيسبوك'),
+                const SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: _loading ? null : _signUp,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.plum,
+                    minimumSize: Size(w * .6, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child:
+                      _loading
+                          ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                          : const Text(
+                            'إنشاء الملف',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontFamily: 'Jawadtaut',
+                            ),
+                          ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'عندك حساب؟',
+                      style: TextStyle(
+                        color: Color(0xFFB8B6B6),
+                        fontFamily: 'Jawadtaut',
+                      ),
+                    ),
+                    TextButton(
+                      onPressed:
+                          () => Navigator.pushNamed(
+                            context,
+                            'Dawini/Doctor/Login',
+                          ),
+                      child: const Text(
+                        'سجّل دخولك',
                         style: TextStyle(
-                          color: Color(0xFFB8B6B6),
+                          color: AppColors.berryPurple,
                           fontFamily: 'Jawadtaut',
                         ),
                       ),
-                      TextButton(
-                        onPressed:
-                            () => Navigator.pushReplacementNamed(
-                              context,
-                              'Dawini/Doctor/Login',
-                            ),
-                        child: const Text(
-                          'سجّل دخولك',
-                          style: TextStyle(
-                            color: AppColors.berryPurple,
-                            fontFamily: 'Jawadtaut',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+              ],
             ),
           ),
         ),

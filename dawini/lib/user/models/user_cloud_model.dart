@@ -3,18 +3,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class UserCloudModel {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Store a message in Firestore in the chat document
   Future<void> storeMessage(
-      String userUID, String chatID, String message, String sender) async {
+    String userUID,
+    String chatID,
+    String message,
+    String sender,
+  ) async {
     try {
-      // Get the chat document reference using the provided chatID
       DocumentReference chatRef = _firestore
           .collection('users')
           .doc(userUID)
           .collection('chats')
           .doc(chatID);
 
-      // Store the message in the chat document's messages subcollection
       await chatRef.collection('messages').add({
         'text': message,
         'timestamp': FieldValue.serverTimestamp(),
@@ -45,16 +46,13 @@ class UserCloudModel {
         .snapshots();
   }
 
-  // Start a new chat (add a new empty chat document)
   Future<DocumentReference> startNewChat(String userUID) async {
     try {
       DocumentReference chatRef = await _firestore
           .collection('users')
           .doc(userUID)
           .collection('chats')
-          .add({
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+          .add({'createdAt': FieldValue.serverTimestamp()});
       return chatRef;
     } catch (e) {
       print('Error starting new chat: $e');
@@ -78,11 +76,12 @@ class UserCloudModel {
 
   Future<void> deleteAllChats(String userUID) async {
     try {
-      var chatsSnapshot = await _firestore
-          .collection('users')
-          .doc(userUID)
-          .collection('chats')
-          .get();
+      var chatsSnapshot =
+          await _firestore
+              .collection('users')
+              .doc(userUID)
+              .collection('chats')
+              .get();
       if (chatsSnapshot.docs.isEmpty) {
         print('No chats to delete');
         return;
@@ -97,16 +96,16 @@ class UserCloudModel {
     }
   }
 
-  // Check if a chat has no messages
   Future<bool> isChatEmpty(String userUID, String chatID) async {
     try {
-      final messagesSnapshot = await _firestore
-          .collection('users')
-          .doc(userUID)
-          .collection('chats')
-          .doc(chatID)
-          .collection('messages')
-          .get();
+      final messagesSnapshot =
+          await _firestore
+              .collection('users')
+              .doc(userUID)
+              .collection('chats')
+              .doc(chatID)
+              .collection('messages')
+              .get();
       return messagesSnapshot.docs.isEmpty;
     } catch (e) {
       print('Error checking if chat is empty: $e');

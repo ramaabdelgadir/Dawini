@@ -16,30 +16,13 @@ class DoctorHomeView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
-                'assets/images/dhome.png', // make sure this asset exists
+                'assets/images/dhome.png',
                 width: screenW * 0.9,
                 height: screenH * 0.25,
               ),
-              // const Text(
-              //   'داويني',
-              //   style: TextStyle(
-              //     color: AppColors.orchidPink,
-              //     fontSize: 26,
-              //     fontWeight: FontWeight.bold,
-              //     fontFamily: 'TIDO',
-              //     shadows: [
-              //       Shadow(
-              //         offset: Offset(2.0, 2.0),
-              //         blurRadius: 5.0,
-              //         color: AppColors.deepShadow,
-              //       ),
-              //     ],
-              //   ),
-              // ),
               const SizedBox(height: 10),
               const Text(
                 'أهلاً بك في داويني',
-
                 style: TextStyle(
                   color: AppColors.orchidPink,
                   fontSize: 27,
@@ -77,10 +60,7 @@ class DoctorHomeView extends StatelessWidget {
               const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pushReplacementNamed(
-                    context,
-                    'Dawini/Doctor/Login',
-                  );
+                  Navigator.pushNamed(context, 'Dawini/Doctor/Login');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.plum,

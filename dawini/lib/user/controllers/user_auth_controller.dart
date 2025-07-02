@@ -1,6 +1,7 @@
-import 'package:dawini/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dawini/theme/app_colors.dart';
 import 'package:dawini/user/models/user_auth_model.dart';
 
 class UserAuthController {
@@ -13,16 +14,29 @@ class UserAuthController {
   ) async {
     try {
       await _authModel.login(email, password);
-      if (context.mounted) {
-        Navigator.pushReplacementNamed(context, 'Dawini/User/ChatScreen');
-      }
-    } catch (e) {
-      if (context.mounted) {
+
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null || !(await _isProfileComplete(uid))) {
         _showError(
           context,
-          '(Login failed) ${_formatFirebaseError(e.toString())}',
+          ' يبدو أن هذا الحساب غير مخصص لهذا القسم\n يُرجى استخدام الحساب المناسب.',
         );
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('Dawini/User/Login', (route) => false);
+        await Future.delayed(Duration(milliseconds: 100));
+
+        await FirebaseAuth.instance.signOut();
+        return;
       }
+
+      if (context.mounted) {
+        Navigator.pushNamed(context, 'Dawini/User/ChatScreen');
+      }
+    } on FirebaseAuthException catch (e) {
+      if (context.mounted) _showError(context, _translateError(e.code));
+    } catch (_) {
+      if (context.mounted) _showError(context, 'حدث خطأ غير متوقع');
     }
   }
 
@@ -35,31 +49,23 @@ class UserAuthController {
     try {
       await _authModel.signUp(email, password, name);
       if (context.mounted) {
-        Navigator.pushReplacementNamed(context, 'Dawini/User/ChatScreen');
+        Navigator.pushNamed(context, 'Dawini/User/ChatScreen');
       }
-    } catch (e) {
-      if (context.mounted) {
-        _showError(
-          context,
-          '(Sign Up failed) ${_formatFirebaseError(e.toString())}',
-        );
-      }
+    } on FirebaseAuthException catch (e) {
+      if (context.mounted) _showError(context, _translateError(e.code));
+    } catch (_) {
+      if (context.mounted) _showError(context, 'حدث خطأ غير متوقع');
     }
   }
 
   Future<void> logout(BuildContext context) async {
     try {
       await _authModel.logOut();
-    } catch (e) {
-      if (context.mounted) {
-        _showError(context, '(Error) ${_formatFirebaseError(e.toString())}');
-      }
+    } on FirebaseAuthException catch (e) {
+      if (context.mounted) _showError(context, _translateError(e.code));
+    } catch (_) {
+      if (context.mounted) _showError(context, 'حدث خطأ أثناء تسجيل الخروج');
     }
-  }
-
-  Future<String?> getUserName() async {
-    final userUID = FirebaseAuth.instance.currentUser!.uid;
-    return await _authModel.getUserName(userUID);
   }
 
   Future<void> updateProfile({
@@ -72,47 +78,40 @@ class UserAuthController {
 
     try {
       await _authModel.updateName(newName);
-    } catch (e) {
+    } on FirebaseAuthException catch (e) {
       errorOccurred = true;
-      if (context.mounted) {
-        _showError(
-          context,
-          '(Error updating name) ${_formatFirebaseError(e.toString())}',
-        );
-      }
+      if (context.mounted) _showError(context, _translateError(e.code));
     }
 
     try {
       await _authModel.updateEmail(newEmail);
-    } catch (e) {
+    } on FirebaseAuthException catch (e) {
       errorOccurred = true;
-      if (context.mounted) {
-        _showError(
-          context,
-          '(Error updating email) ${_formatFirebaseError(e.toString())}',
-        );
-      }
+      if (context.mounted) _showError(context, _translateError(e.code));
     }
 
-    try {
-      if (newPassword.isNotEmpty) {
+    if (newPassword.isNotEmpty) {
+      try {
         await _authModel.updatePassword(newPassword);
-      }
-    } catch (e) {
-      errorOccurred = true;
-      if (context.mounted) {
-        _showError(
-          context,
-          '(Error updating password) ${_formatFirebaseError(e.toString())}',
-        );
+      } on FirebaseAuthException catch (e) {
+        errorOccurred = true;
+        if (context.mounted) _showError(context, _translateError(e.code));
       }
     }
 
     if (!errorOccurred && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Your data has been updated successfully'),
+          content: const Text(
+            'تم تحديث بياناتك بنجاح',
+            textDirection: TextDirection.rtl,
+          ),
           backgroundColor: AppColors.plum,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
     }
@@ -121,31 +120,66 @@ class UserAuthController {
   Future<void> deleteAccount(BuildContext context) async {
     try {
       await _authModel.deleteAccount();
+    } on FirebaseAuthException catch (e) {
+      if (context.mounted) _showError(context, _translateError(e.code));
+    } catch (_) {
+      if (context.mounted) _showError(context, 'حدث خطأ أثناء حذف الحساب');
+    }
+  }
+
+  Future<String?> getUserName() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      return await _authModel.getUserName(uid);
+    }
+    return null;
+  }
+
+  Future<bool> _isProfileComplete(String uid) async {
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+      if (!snapshot.exists) return false;
+
+      final data = snapshot.data();
+      final hasName = (data?['name'] as String?)?.trim().isNotEmpty ?? false;
+      final hasEmail = (data?['email'] as String?)?.trim().isNotEmpty ?? false;
+
+      return hasName && hasEmail;
     } catch (e) {
-      if (context.mounted) {
-        _showError(
-          context,
-          '(Error deleting account) ${_formatFirebaseError(e.toString())}',
-        );
-      }
+      return false;
     }
   }
 
   void _showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(
+          message,
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.rtl,
+        ),
         backgroundColor: AppColors.plum,
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.only(bottom: 515, left: 20, right: 20),
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
-}
 
-String _formatFirebaseError(String error) {
-  RegExp regex = RegExp(r'\[firebase_auth/([\w-]+)\]\s*(.+)');
-  Match? match = regex.firstMatch(error);
-  return match != null ? '${match.group(1)}: ${match.group(2)}' : error;
+  String _translateError(String code) {
+    const map = <String, String>{
+      'invalid-email': 'تنسيق البريد الإلكتروني غير صالح',
+      'user-disabled': 'تم تعطيل هذا المستخدم',
+      'user-not-found': 'لا يوجد مستخدم بهذا البريد',
+      'wrong-password': 'كلمة المرور غير صحيحة',
+      'email-already-in-use': 'البريد مستخدم من قبل',
+      'weak-password': 'كلمة المرور ضعيفة – استخدم 6 أحرف فأكثر',
+      'too-many-requests': 'محاولات كثيرة. انتظر قليلاً',
+      'network-request-failed': 'تعذّر الاتصال بالإنترنت',
+      'requires-recent-login': 'يجب تسجيل الدخول مجدداً لتنفيذ هذه العملية',
+    };
+    return map[code] ?? 'خطأ غير متوقع ($code)';
+  }
 }

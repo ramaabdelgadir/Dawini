@@ -9,4 +9,5 @@ class AppColors {
   static const Color darkBackground = Color(0xFF231227);
   static const Color plum = Color(0xFF522858);
   static const Color berryPurple = Color(0xFF63306A);
+  static const Color plumPurple = Color(0xFF864793);
 }

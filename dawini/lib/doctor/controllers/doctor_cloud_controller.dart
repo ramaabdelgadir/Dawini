@@ -23,7 +23,6 @@ class DoctorCloudController {
     return null;
   }
 
-  /// New: Overwrite existing doctor document with updated data
   Future<void> updateDoctorData(DoctorCloudModel doctor) async {
     await _firestore
         .collection(collection)

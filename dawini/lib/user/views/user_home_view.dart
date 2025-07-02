@@ -63,7 +63,7 @@ class UserOpenUpPage extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppColors.berryPurple,
-                  fontSize: 24,
+                  fontSize: 24.5,
                   fontFamily: 'Jawadtaut',
                   shadows: [
                     Shadow(
@@ -74,17 +74,14 @@ class UserOpenUpPage extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 65),
+              const SizedBox(height: 57),
               Stack(
                 clipBehavior: Clip.none,
                 alignment: Alignment.center,
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.pushReplacementNamed(
-                        context,
-                        'Dawini/User/Login',
-                      );
+                      Navigator.pushNamed(context, 'Dawini/User/Login');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.plum,

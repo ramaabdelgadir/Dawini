@@ -1,5 +1,5 @@
 import 'package:dawini/theme/app_colors.dart';
-import 'package:dawini/doctor/controllers/doctor_auth_controller.dart';
+import '../controllers/doctor_auth_controller.dart';
 import 'package:flutter/material.dart';
 
 class DoctorLoginView extends StatelessWidget {
@@ -47,7 +47,7 @@ class LoginFormState extends State<LoginForm> {
           ),
           backgroundColor: AppColors.plum,
           behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.only(bottom: 515, left: 20, right: 20),
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -75,7 +75,6 @@ class LoginFormState extends State<LoginForm> {
         ),
         const SizedBox(height: 40),
 
-        // البريد الإلكتروني
         TextFormField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
@@ -97,7 +96,6 @@ class LoginFormState extends State<LoginForm> {
         ),
         const SizedBox(height: 20),
 
-        // كلمة المرور
         TextFormField(
           controller: _passwordController,
           obscureText: !_isPasswordVisible,
@@ -129,7 +127,6 @@ class LoginFormState extends State<LoginForm> {
         ),
         const SizedBox(height: 40),
 
-        // زر الدخول
         ElevatedButton(
           onPressed: _attemptLogin,
           style: ElevatedButton.styleFrom(
@@ -150,7 +147,6 @@ class LoginFormState extends State<LoginForm> {
         ),
         const SizedBox(height: 20),
 
-        // نص التحويل للتسجيل
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -164,7 +160,7 @@ class LoginFormState extends State<LoginForm> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pushReplacementNamed(context, 'Dawini/Doctor/Signup');
+                Navigator.pushNamed(context, 'Dawini/Doctor/Signup');
               },
               child: const Text(
                 'أنشئ ملفك',

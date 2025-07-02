@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:dawini/theme/app_colors.dart';
-import 'package:dawini/doctor/controllers/doctor_profile_controller.dart';
-import 'package:dawini/doctor/models/doctor_cloud_model.dart';
+import '../../theme/app_colors.dart';
+import '../controllers/doctor_auth_controller.dart';
+import '../models/doctor_cloud_model.dart';
 
 class DoctorProfileView extends StatefulWidget {
   const DoctorProfileView({super.key});
@@ -11,392 +11,385 @@ class DoctorProfileView extends StatefulWidget {
 }
 
 class _DoctorProfileViewState extends State<DoctorProfileView> {
-  /* ───────── controller ───────── */
-  final DoctorProfileController _profileController = DoctorProfileController();
+  final _authCtrl = DoctorAuthController();
 
-  /* ───────── form controllers ───────── */
-  final TextEditingController _nameC = TextEditingController();
-  final TextEditingController _specC = TextEditingController();
-  final TextEditingController _addrC = TextEditingController();
-  final TextEditingController _cityC = TextEditingController();
-  final TextEditingController _phoneC = TextEditingController();
-  final TextEditingController _emailC = TextEditingController();
-  final TextEditingController _lnC = TextEditingController();
-  final TextEditingController _fbC = TextEditingController();
-  final TextEditingController _newPass = TextEditingController();
-  final TextEditingController _confPass = TextEditingController();
+  final _name = TextEditingController();
+  final _spec = TextEditingController();
+  final _addr = TextEditingController();
+  final _city = TextEditingController();
+  final _phone = TextEditingController();
+  final _email = TextEditingController();
+  final _ln = TextEditingController();
+  final _password = TextEditingController();
 
-  /* ───────── flags ───────── */
-  bool _isLoading = true;
-  bool _isSaving = false;
-  bool _isUpdatingPassword = false;
-  bool _isDeleting = false;
-  bool _showNew = false;
-  bool _showConf = false;
+  bool _loading = true;
+  bool _saving = false;
+  bool _editing = false;
 
-  String? _uid;
+  DoctorCloudModel? _initial;
 
-  /* ───────── lifecycle ───────── */
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    _fetch();
   }
 
-  Future<void> _fetchData() async {
-    final data = await _profileController.getDoctorProfile(context);
-    if (data != null) {
-      _uid = data.uid;
-      _nameC.text = data.name;
-      _specC.text = data.specialization;
-      _addrC.text = data.address;
-      _cityC.text = data.city;
-      _phoneC.text = data.phone;
-      _emailC.text = data.email;
-      _lnC.text = data.linkedinUrl;
-      _fbC.text = data.facebookUrl;
+  Future<void> _fetch() async {
+    _initial = await _authCtrl.getDoctorProfile();
+    if (_initial != null) {
+      _name.text = _initial!.name;
+      _spec.text = _initial!.specialization;
+      _addr.text = _initial!.address;
+      _city.text = _initial!.city;
+      _phone.text = _initial!.phone;
+      _email.text = _initial!.email;
+      _ln.text = _initial!.linkedinUrl;
     }
-    setState(() => _isLoading = false);
+    setState(() => _loading = false);
   }
 
-  /* ───────── validation helper ───────── */
-  void _localSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg, textDirection: TextDirection.rtl),
-        backgroundColor: AppColors.plum,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.only(bottom: 515, left: 20, right: 20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
+  /* -------------- حفظ التعديلات -------------- */
+  Future<void> _save() async {
+    if (_initial == null) return;
 
-  /* ───────── save profile ───────── */
-  Future<void> _saveProfile() async {
-    if (_uid == null) return;
+    final changed =
+        _name.text.trim() != _initial!.name ||
+        _spec.text.trim() != _initial!.specialization ||
+        _addr.text.trim() != _initial!.address ||
+        _city.text.trim() != _initial!.city ||
+        _phone.text.trim() != _initial!.phone ||
+        _email.text.trim() != _initial!.email ||
+        _ln.text.trim() != _initial!.linkedinUrl;
 
-    if (_nameC.text.trim().isEmpty ||
-        _specC.text.trim().isEmpty ||
-        _addrC.text.trim().isEmpty ||
-        _cityC.text.trim().isEmpty ||
-        _phoneC.text.trim().isEmpty ||
-        _emailC.text.trim().isEmpty ||
-        _lnC.text.trim().isEmpty ||
-        _fbC.text.trim().isEmpty) {
-      _localSnack('يرجى تعبئة جميع الحقول');
+    if (!changed && _password.text.trim().isEmpty) {
+      setState(() => _editing = false);
+      _toast('لم يتم تعديل أي بيانات');
       return;
     }
 
-    setState(() => _isSaving = true);
-
-    final doc = DoctorCloudModel(
-      uid: _uid!,
-      name: _nameC.text.trim(),
-      specialization: _specC.text.trim(),
-      address: _addrC.text.trim(),
-      city: _cityC.text.trim(),
-      phone: _phoneC.text.trim(),
-      email: _emailC.text.trim(),
-      linkedinUrl: _lnC.text.trim(),
-      facebookUrl: _fbC.text.trim(),
+    setState(() => _saving = true);
+    final updated = DoctorCloudModel(
+      uid: _initial!.uid,
+      name: _name.text.trim(),
+      specialization: _spec.text.trim(),
+      address: _addr.text.trim(),
+      city: _city.text.trim(),
+      phone: _phone.text.trim(),
+      email: _email.text.trim(),
+      linkedinUrl: _ln.text.trim(),
+      latitude: _initial!.latitude,
+      longitude: _initial!.longitude,
+      starCount: _initial!.starCount,
     );
 
-    await _profileController.updateDoctorProfile(doc, context);
-    setState(() => _isSaving = false);
+    await _authCtrl.updateDoctorProfile(initial: updated);
+
+    // Update password only if not empty
+    if (_password.text.trim().isNotEmpty) {
+      await _authCtrl.updatePassword(_password.text.trim());
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _saving = false;
+      _editing = false;
+      _initial = updated;
+      _password.clear();
+    });
+    _toast('تم الحفظ بنجاح');
   }
 
-  /* ───────── password ───────── */
-  Future<void> _changePass() async {
-    final newP = _newPass.text.trim();
-    final conf = _confPass.text.trim();
-    if (newP.isEmpty || conf.isEmpty) {
-      _localSnack('يرجى تعبئة حقلي كلمة المرور');
-      return;
-    }
-    if (newP != conf) {
-      _localSnack('كلمات المرور غير متطابقة');
-      return;
-    }
-    setState(() => _isUpdatingPassword = true);
-    await _profileController.updatePassword(newP, context);
-    _newPass.clear();
-    _confPass.clear();
-    setState(() => _isUpdatingPassword = false);
+  /* -------------- حذف الحساب -------------- */
+  Future<void> _confirmAndDelete() async {
+    final yes = await showDialog<bool>(
+      context: context,
+      builder:
+          (c) => AlertDialog(
+            title: const Text('حذف الحساب'),
+            content: const Text(
+              'هل أنت متأكد من حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء.',
+              textDirection: TextDirection.rtl,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(c, false),
+                child: const Text('إلغاء'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(c, true),
+                child: const Text('حذف'),
+              ),
+            ],
+          ),
+    );
+    if (yes == true) await _authCtrl.deleteAccount(context);
   }
 
-  /* ───────── delete ───────── */
-  Future<void> _deleteAcc() async {
-    setState(() => _isDeleting = true);
-    await _profileController.deleteAccount(context);
-    await _profileController.signOut();
-    setState(() => _isDeleting = false);
-    if (mounted) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        'Dawini/Doctor/Login',
-        (_) => false,
+  void _toast(String msg) => ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(msg, textDirection: TextDirection.rtl),
+      backgroundColor: AppColors.plum,
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    ),
+  );
+
+  Widget _infoCard(String label, Widget child) => Container(
+    margin: const EdgeInsets.symmetric(vertical: 8),
+    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+    decoration: BoxDecoration(
+      color: AppColors.darkPlum,
+      borderRadius: BorderRadius.circular(18),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.1),
+          blurRadius: 5,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 120,
+          child: Text(
+            '$label:',
+            style: const TextStyle(
+              color: AppColors.plumPurple,
+              fontFamily: 'Jawadtaut',
+              fontSize: 19,
+            ),
+          ),
+        ),
+        Expanded(child: child),
+      ],
+    ),
+  );
+
+  Widget _textOrField(
+    TextEditingController c, {
+    TextInputType type = TextInputType.text,
+  }) {
+    if (!_editing) {
+      return Text(
+        c.text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 17,
+          fontFamily: 'Din',
+        ),
       );
     }
-  }
-
-  /* ───────── UI helpers ───────── */
-  Widget _header(String t) => Padding(
-    padding: const EdgeInsets.only(top: 24, bottom: 8),
-    child: Text(
-      t,
-      style: const TextStyle(
-        color: AppColors.berryPurple,
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        fontFamily: 'Jawadtaut',
-        shadows: [
-          Shadow(
-            offset: Offset(1, 1),
-            blurRadius: 5,
-            color: AppColors.deepShadow,
-          ),
-        ],
-      ),
-    ),
-  );
-
-  Widget _field({
-    required TextEditingController c,
-    required String hint,
-    TextInputType type = TextInputType.text,
-    bool pass = false,
-    bool visible = false,
-    VoidCallback? toggle,
-  }) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: TextField(
+    return TextField(
       controller: c,
       keyboardType: type,
-      obscureText: pass && !visible,
-      decoration: InputDecoration(
-        hintText: hint,
+      style: const TextStyle(color: Colors.white, fontFamily: 'Din'),
+      decoration: const InputDecoration(
         filled: true,
         fillColor: AppColors.deepPurple,
-        hintStyle: const TextStyle(
-          color: Color(0xFFB8B6B6),
-          fontFamily: 'Din',
-          fontSize: 17,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+          borderSide: BorderSide.none,
         ),
-        border: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(25)),
-        ),
-        suffixIcon:
-            pass
-                ? IconButton(
-                  icon: Icon(visible ? Icons.visibility_off : Icons.visibility),
-                  onPressed: toggle,
-                )
-                : null,
       ),
-      style: const TextStyle(color: Colors.white, fontFamily: 'Din'),
-    ),
-  );
+    );
+  }
 
-  /* ───────── build ───────── */
   @override
   Widget build(BuildContext context) {
-    final screenW = MediaQuery.of(context).size.width;
-
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: SafeArea(
-          child:
-              _isLoading
-                  ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.plum),
-                  )
-                  : SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 20),
-                        Center(
-                          child: CircleAvatar(
-                            radius: 50,
-                            backgroundColor: AppColors.plum,
-                            child: Text(
-                              _nameC.text.isEmpty ? '?' : _nameC.text[0],
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 40,
-                                fontFamily: 'Jawadtaut',
+      appBar: AppBar(
+        backgroundColor: AppColors.darkBackground,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_forever, color: AppColors.darkPlum),
+            onPressed: _confirmAndDelete,
+            tooltip: 'حذف الحساب',
+          ),
+          IconButton(
+            icon:
+                _saving
+                    ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                    : Icon(
+                      _editing ? Icons.save : Icons.edit,
+                      color: Colors.white,
+                    ),
+            onPressed:
+                _saving
+                    ? null
+                    : _editing
+                    ? _save
+                    : () => setState(() => _editing = true),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body:
+          _loading
+              ? const Center(
+                child: CircularProgressIndicator(color: AppColors.plum),
+              )
+              : Directionality(
+                textDirection: TextDirection.rtl,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 22,
+                        ),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 24,
+                                horizontal: 18,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.plum,
+                                borderRadius: BorderRadius.circular(22),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.15),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  const CircleAvatar(
+                                    radius: 48,
+                                    backgroundColor: AppColors.darkPlum,
+                                    backgroundImage: AssetImage(
+                                      'assets/images/doctor_default.png',
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Center(
-                          child: Text(
-                            _nameC.text,
-                            style: const TextStyle(
-                              color: AppColors.orchidPink,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Jawadtaut',
-                              shadows: [
-                                Shadow(
-                                  offset: Offset(2, 2),
-                                  blurRadius: 5,
-                                  color: AppColors.deepShadow,
+                            const SizedBox(height: 22),
+
+                            // Editable info cards
+                            _infoCard('الاسم الكامل', _textOrField(_name)),
+                            _infoCard('التخصص', _textOrField(_spec)),
+                            _infoCard('العنوان', _textOrField(_addr)),
+                            _infoCard('المدينة', _textOrField(_city)),
+                            _infoCard(
+                              'رقم الهاتف',
+                              _textOrField(_phone, type: TextInputType.phone),
+                            ),
+                            _infoCard(
+                              'البريد الإلكتروني',
+                              _textOrField(
+                                _email,
+                                type: TextInputType.emailAddress,
+                              ),
+                            ),
+                            _infoCard('لينكدإن', _textOrField(_ln)),
+
+                            // Password field visible only when editing
+                            if (_editing)
+                              _infoCard(
+                                'كلمة المرور الجديدة',
+                                TextField(
+                                  controller: _password,
+                                  obscureText: true,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: 'Din',
+                                  ),
+                                  decoration: const InputDecoration(
+                                    filled: true,
+                                    fillColor: AppColors.deepPurple,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(20),
+                                      ),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
                                 ),
-                              ],
+                              ),
+
+                            const SizedBox(height: 24),
+
+                            ElevatedButton(
+                              onPressed:
+                                  () async => await _authCtrl.logout(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.darkPlum,
+                                minimumSize: const Size(170, 48),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(22),
+                                ),
+                              ),
+                              child: const Text(
+                                'تسجيل الخروج',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontFamily: 'Jawadtaut',
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 16),
+                          ],
                         ),
-
-                        /* personal */
-                        _header('البيانات الشخصية'),
-                        _field(c: _nameC, hint: 'الاسم الكامل'),
-                        _field(c: _specC, hint: 'التخصص'),
-                        _field(c: _addrC, hint: 'العنوان الكامل'),
-                        _field(c: _cityC, hint: 'المدينة'),
-
-                        /* contact */
-                        _header('بيانات الاتصال'),
-                        _field(
-                          c: _phoneC,
-                          hint: 'رقم الهاتف',
-                          type: TextInputType.phone,
-                        ),
-                        _field(
-                          c: _emailC,
-                          hint: 'البريد الإلكتروني',
-                          type: TextInputType.emailAddress,
-                        ),
-
-                        /* social */
-                        _header('روابط السوشيال ميديا'),
-                        _field(c: _lnC, hint: 'رابط لينكدإن'),
-                        _field(c: _fbC, hint: 'رابط فيسبوك'),
-
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: _isSaving ? null : _saveProfile,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.plum,
-                            minimumSize: Size(screenW * 0.6, 55),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            elevation: 10,
-                            shadowColor: AppColors.deepShadow,
-                          ),
-                          child:
-                              _isSaving
-                                  ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                  : const Text(
-                                    'حفظ التغييرات',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Jawadtaut',
-                                    ),
-                                  ),
-                        ),
-
-                        /* password */
-                        _header('تغيير كلمة المرور'),
-                        _field(
-                          c: _newPass,
-                          hint: 'كلمة مرور جديدة',
-                          pass: true,
-                          visible: _showNew,
-                          toggle: () => setState(() => _showNew = !_showNew),
-                        ),
-                        _field(
-                          c: _confPass,
-                          hint: 'تأكيد كلمة المرور',
-                          pass: true,
-                          visible: _showConf,
-                          toggle: () => setState(() => _showConf = !_showConf),
-                        ),
-                        const SizedBox(height: 8),
-                        ElevatedButton(
-                          onPressed: _isUpdatingPassword ? null : _changePass,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.plum,
-                            minimumSize: Size(screenW * 0.6, 50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            elevation: 8,
-                            shadowColor: AppColors.deepShadow,
-                          ),
-                          child:
-                              _isUpdatingPassword
-                                  ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                  : const Text(
-                                    'تحديث كلمة المرور',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Jawadtaut',
-                                    ),
-                                  ),
-                        ),
-
-                        /* delete */
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: _isDeleting ? null : _deleteAcc,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.darkPlum,
-                            minimumSize: Size(screenW * 0.6, 50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                          ),
-                          child:
-                              _isDeleting
-                                  ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                  : const Text(
-                                    'حذف الحساب',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Jawadtaut',
-                                    ),
-                                  ),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
+                      ),
                     ),
-                  ),
-        ),
-      ),
+
+                    SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed:
+                              () => Navigator.pushNamed(
+                                context,
+                                'Dawini/Doctor/PatientReports',
+                              ),
+                          icon: const Icon(
+                            Icons.picture_as_pdf_outlined,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            'تقارير المرضى',
+                            style: TextStyle(
+                              fontFamily: 'Jawadtaut',
+                              fontSize: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.plum,
+                            minimumSize: const Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
     );
   }
 }

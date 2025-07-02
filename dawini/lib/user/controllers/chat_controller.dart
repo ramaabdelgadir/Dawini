@@ -4,29 +4,17 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ChatController {
-  // Singleton setup
   static final ChatController _instance = ChatController._internal();
   factory ChatController() => _instance;
   ChatController._internal();
 
   final CloudController _cloudController = CloudController();
-  String? apiBaseUrl;
-
-  Future<void> _initApiUrl() async {
-    if (apiBaseUrl != null && apiBaseUrl!.isNotEmpty) return;
-
-    final doc =
-        await FirebaseFirestore.instance.collection('config').doc('api').get();
-
-    if (doc.exists) {
-      final data = doc.data();
-      apiBaseUrl = data?['apiUrl'] as String?;
-    }
-  }
+  final http.Client _client = http.Client();
+  final String apiBaseUrl =
+      'https://8000-dep-01jywqr3484cy10dx1gxz7mhha-d.cloudspaces.litng.ai';
+  final String _authToken = 'Bearer d8856783-7ef2-48eb-96eb-1114ca776e14';
 
   Future<String> initializeChat() async {
-    await _initApiUrl();
-
     if (_cloudController.currentChatID == null) {
       await _cloudController.startNewChat();
     }
@@ -46,26 +34,74 @@ class ChatController {
   }
 
   Future<String> getAIResponse(String userMessage) async {
-    if (apiBaseUrl == null || apiBaseUrl!.isEmpty) {
-      return 'Error: API base URL is not set.';
+    final apiUrl = '$apiBaseUrl/generate-answer/';
+    final userId = _cloudController.userID;
+    final chatId = _cloudController.currentChatID;
+
+    if (chatId == null) {
+      return 'خطأ: لا يمكن تحديد المحادثة.';
     }
 
-    final apiUrl = '${apiBaseUrl!}/generate';
     try {
-      final response = await http.post(
+      // Fetch messages from Firestore (ordered by timestamp ascending)
+      final messagesSnapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .collection('chats')
+              .doc(chatId)
+              .collection('messages')
+              .orderBy('timestamp')
+              .get();
+
+      final chatHistory = <Map<String, String>>[];
+
+      chatHistory.add({
+        'role': 'system',
+        'content':
+            'You are an expert artificial intelligence-based Arabic medical chatbot named Dawini depends on reliable medical knowledge to answer patient medical questions. Answer the last question sent by the user considering all previous chat history.',
+      });
+
+      for (final doc in messagesSnapshot.docs) {
+        final data = doc.data();
+        final sender = (data['sender'] ?? '').toString().toLowerCase();
+        final text = (data['text'] ?? '').toString().trim();
+
+        if (text.isEmpty) continue;
+
+        chatHistory.add({
+          'role': sender == 'user' ? 'user' : 'assistant',
+          'content': text,
+        });
+      }
+
+      // Compose the request body
+      final body = {'prompt': userMessage, 'chat_history': chatHistory};
+
+      print('Sending POST request to $apiUrl with body: $body');
+
+      final response = await _client.post(
         Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'prompt': userMessage}),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': _authToken,
+        },
+        body: jsonEncode(body),
       );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
-        return data['response']?.toString() ?? 'No response from AI.';
+        return data['answer']?.toString() ?? 'حدث خطأ في تلقي الرد.';
       } else {
-        return 'Error: ${response.statusCode}';
+        return 'حدث خطأ في الاتصال: ${response.statusCode}';
       }
-    } catch (e) {
-      return '$e (Error connecting to AI) ';
+    } catch (e, stack) {
+      print('Error calling AI API: $e');
+      print(stack);
+      return 'حدث خطأ أثناء الاتصال بالذكاء الاصطناعي:\n$e';
     }
   }
 }

@@ -76,32 +76,50 @@ lib/
 
 doctors (Collection) 🗃️
 │
-├── doctorUID_1 (Document)
-│   ├── name: "Dr. Aisha Ibrahim" 🏷️
-│   ├── email: "dr.aisha@example.com" 📧
-│   ├── description: "Specialist in internal medicine" 📄
-│   ├── yearsOfExperience: 7 📆
-│   ├── location: "Cairo, Egypt" 📍
-│   ├── profileImageUrl: "https://..." 🖼️
-│   ├── specialties: ["Cardiology", "Endocrinology"] 🩻
-│   ├── rating: 4.8 ⭐
-|
-├── doctorUID_2 (Document)
-│   ├── name: "Dr. Omar Elsayed" 🏷️
-│   ├── email: "dr.omar@example.com" 📧
-│   ├── description: "Orthopedic surgeon with expertise in sports injuries" 📄
-│   ├── yearsOfExperience: 12 📆
-│   ├── location: "Alexandria, Egypt" 📍
-│   ├── profileImageUrl: "https://..." 🖼️
-│   ├── specialties: ["Orthopedics", "Sports Medicine"] 🏋️‍♂️
-│   ├── rating: 4.6 ⭐
-|
+├── doctorUID_X (Document)
+│   ├── uid: "doctorUID_X" 🆔
+│   ├── name: "د. …" 🏷️
+│   ├── specialization: "التخصص" 🩻
+│   ├── address: "العنوان التفصيلي" 📍
+│   ├── city: "المدينة" 🏙️
+│   ├── phone: "+20…" ☎️
+│   ├── email: "doctor@example.com" 📧
+│   ├── linkedinUrl: "https://…" 🔗
+│   ├── facebookUrl: "https://…" 🔗
+│   ├── latitude: 30.0444 🗺️
+│   ├── longitude: 31.2357 🗺️
+│   ├── starCount: 4.8 ⭐
+│   └── patientReports (Subcollection)
+│       ├── reportID_1 (Document)
+│       │   ├── patientId: "userUID_1" 👤
+│       │   ├── pdfUrl: "https://firebasestorage.googleapis.com/..." 📄
+│       │   ├── sentAt: 2025-02-02T12:00:02Z ⏲️
+│       ├── reportID_2 (Document)
+│       │   ├── patientId: "userUID_2"
+│       │   ├── pdfUrl: "https://..."
+│       │   ├── sentAt: 2025-02-02T12:00:02Z ⏲️
+|       └── …  
 |
 users (Collection) 🗃️
 │
 ├── userUID_1 (Document)
 │   ├── name: "User Name" 🏷️
 │   ├── email: "user@example.com" 📧
+|   |
+|   └── medicalForms (Subcollection) 💊
+│   │   ├── medicalForm_1 (Document)
+│   │   │   ├── createdAt: Timestamp ⏲️
+│   │   │   ├── report: "http://res.cloudinary.com/ds28kysew/image/upload/..." 📄
+│   │   │   ├── العمر: "28"
+│   │   │   ├── الوزن: "65"
+│   │   │   ├── الطول: "165"
+│   │   │   ├── الجنسية: "عربية"
+│   │   │   ├── مكان الإقامة: "الخرطوم"
+│   │   │   ├── الجنس: "أنثى"
+│   │   │   ├── تفاصيل الحالة: "ضغط وسكر"
+│   │   └── …
+│   │
+│   │
 │   ├── chats (Subcollection)
 │   │   ├── chatID_1 (Document)
 │   │   │   ├── createdAt: Timestamp ⏳
@@ -125,4 +143,8 @@ users (Collection) 🗃️
 │   │   │   │   │   ├── text: "AI stands for Artificial Intelligence..." 💬
 │   │   │   │   │   ├── timestamp: 2025-02-02T13:00:02Z ⏲️
 │   │   │   │   │   ├── sender: "AI" 🤖
+│   │   │   │   └── …  
+│   │   │
+│   │   └── …
+│   └── …
 </pre>

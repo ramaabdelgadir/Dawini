@@ -8,10 +8,8 @@ class UserProfileController extends ChangeNotifier {
 
   User? get currentUser => FirebaseAuth.instance.currentUser;
 
-  Future<String> get userName async {
-    String? name = await _authController.getUserName();
-    return name ?? '';
-  }
+  Future<String> get userName async =>
+      (await _authController.getUserName()) ?? '';
 
   String get email => currentUser?.email ?? '';
 
@@ -21,27 +19,34 @@ class UserProfileController extends ChangeNotifier {
     String newPassword = '',
     required BuildContext context,
   }) async {
-    final currentEmail = email;
-    final currentName = await userName;
+    final currentEmail = email.trim();
+    final currentName = (await userName).trim();
 
-    // Check if there are any changes.
-    if (newName == currentName &&
-        newEmail == currentEmail &&
-        newPassword.isEmpty) {
+    if (newName.trim() == currentName &&
+        newEmail.trim() == currentEmail &&
+        newPassword.trim().isEmpty) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('No changes to update.'),
+            content: const Text(
+              'لا توجد تغييرات للتحديث',
+              textDirection: TextDirection.rtl,
+            ),
             backgroundColor: AppColors.plum,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
     } else {
       if (context.mounted) {
         await _authController.updateProfile(
-          newName: newName,
-          newEmail: newEmail,
-          newPassword: newPassword,
+          newName: newName.trim(),
+          newEmail: newEmail.trim(),
+          newPassword: newPassword.trim(),
           context: context,
         );
       }

@@ -156,7 +156,7 @@ class SignUpFormState extends State<SignUpForm> {
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.pushReplacementNamed(context, 'Dawini/User/Login');
+                  Navigator.pushNamed(context, 'Dawini/User/Login');
                 },
                 child: const Text(
                   'سجل دخولك',
