@@ -43,9 +43,7 @@ class ChatViewState extends State<ChatView> {
       _controller.setCurrentChatID(widget.chatID!);
       _chatHistoryController.getCurrentChatID(widget.chatID!);
     }
-
     _messagesStream = _controller.getMessages();
-
     setState(() => _isChatInitialized = true);
   }
 
@@ -67,27 +65,9 @@ class ChatViewState extends State<ChatView> {
     setState(() => _isWaiting = false);
   }
 
-  void onRecommendDoctorsPressed() async {
-    try {
-      if (!mounted) return;
-      Navigator.pushNamed(context, 'Dawini/User/MedicalForm');
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'حدث خطأ أثناء محاولة اقتراح الأطباء. حاول مرة أخرى.',
-            textDirection: TextDirection.rtl,
-          ),
-          backgroundColor: AppColors.plum,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
-    }
+  void onRecommendDoctorsPressed() {
+    if (!mounted) return;
+    Navigator.pushNamed(context, 'Dawini/User/MedicalForm');
   }
 
   @override
@@ -139,20 +119,28 @@ class ChatViewState extends State<ChatView> {
           actions: [
             IconButton(
               icon: const Icon(Icons.add, color: Colors.white),
-              onPressed: () {
-                Navigator.pushNamed(context, 'Dawini/User/ChatScreen');
+              onPressed: () async {
+                final newID = await _controller.startNewChat();
+                if (!mounted) return;
+                Navigator.pushNamed(
+                  context,
+                  'Dawini/User/ChatScreen',
+                  arguments: newID,
+                );
               },
             ),
+
             IconButton(
               icon: const Icon(Icons.person, color: Colors.white),
-              onPressed: () {
-                Navigator.pushNamed(context, 'Dawini/User/Profile');
-              },
+              onPressed:
+                  () => Navigator.pushNamed(context, 'Dawini/User/Profile'),
             ),
             const SizedBox(width: 5),
           ],
         ),
+
         drawer: const ChatHistoryView(),
+
         body: Stack(
           children: [
             StreamBuilder<QuerySnapshot>(
@@ -169,38 +157,38 @@ class ChatViewState extends State<ChatView> {
                         AnimatedTextKit(
                           animatedTexts: [
                             TypewriterAnimatedText(
-                              'مرحباً، $_username ..',
+                              'مرحباً $_username، يسعدني وجودك..',
                               textStyle: const TextStyle(
                                 color: AppColors.softLilac,
-                                fontSize: 30,
-                                fontFamily: 'Kanit',
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(2.0, 2.0),
-                                    blurRadius: 5.0,
-                                    color: Colors.black45,
-                                  ),
-                                ],
+                                fontSize: 18,
+                                fontFamily: 'TIDO',
+                                // shadows: [
+                                //   Shadow(
+                                //     offset: Offset(2.0, 2.0),
+                                //     blurRadius: 2.0,
+                                //     color: Color(0x2E000000),
+                                //   ),
+                                // ],
                               ),
-                              speed: const Duration(milliseconds: 50),
+                              speed: const Duration(milliseconds: 47),
                               cursor: '',
                             ),
                             TypewriterAnimatedText(
-                              'شريكك الصحي الذكي\n     جاهز لمساعدتك!',
+                              'أنا هنا دائماً في خدمتك!',
                               textStyle: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Kanit',
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(2.0, 2.0),
-                                    blurRadius: 5.0,
-                                    color: Colors.black45,
-                                  ),
-                                ],
+                                color: AppColors.softLilac,
+                                fontSize: 19,
+                                //fontWeight: FontWeight.bold,
+                                fontFamily: 'TIDO',
+                                // shadows: [
+                                //   Shadow(
+                                //     offset: Offset(2.0, 2.0),
+                                //     blurRadius: 5.0,
+                                //     color: Color(0x2E000000),
+                                //   ),
+                                // ],
                               ),
-                              speed: const Duration(milliseconds: 25),
+                              speed: const Duration(milliseconds: 30),
                               cursor: '',
                             ),
                           ],
@@ -209,14 +197,14 @@ class ChatViewState extends State<ChatView> {
                           displayFullTextOnTap: true,
                           stopPauseOnTap: true,
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 7),
                         Image.asset('assets/images/c.gif', height: 180),
                       ],
                     ),
                   );
                 }
 
-                List<QueryDocumentSnapshot> docs = snapshot.data!.docs;
+                final docs = snapshot.data!.docs;
                 return Column(
                   children: [
                     Expanded(
@@ -240,10 +228,12 @@ class ChatViewState extends State<ChatView> {
                             );
                           }
 
-                          var data = docs[index].data() as Map<String, dynamic>;
-                          String sender = data['sender'] ?? 'Unknown';
-                          String text = data['text'] ?? '';
-                          Color bgColor =
+                          final data =
+                              docs[index].data() as Map<String, dynamic>;
+                          final sender = data['sender'] ?? 'Unknown';
+                          final text = data['text'] ?? '';
+
+                          final bgColor =
                               sender == "User"
                                   ? AppColors.deepPurple
                                   : AppColors.darkPlum;
@@ -288,6 +278,7 @@ class ChatViewState extends State<ChatView> {
                 );
               },
             ),
+
             Positioned(
               bottom: 30,
               left: 20,
@@ -362,9 +353,7 @@ class ChatViewState extends State<ChatView> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: () {
-                      onRecommendDoctorsPressed();
-                    },
+                    onPressed: onRecommendDoctorsPressed,
                     icon: const Padding(
                       padding: EdgeInsets.only(right: 2, top: 2, bottom: 2),
                       child: Icon(

@@ -1,5 +1,6 @@
 import 'package:dawini/doctor/debug_screen.dart';
 import 'package:dawini/doctor/views/patiant_reports_view.dart';
+import 'package:dawini/splash_view.dart';
 import 'package:dawini/theme/app_colors.dart';
 import 'package:dawini/role_selection_view.dart';
 import 'package:dawini/user/views/recomended_doctors_views.dart';
@@ -55,7 +56,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Dawini',
       theme: ThemeData(scaffoldBackgroundColor: AppColors.darkBackground),
-      initialRoute: 'Dawini',
+      home: StartupView(),
+      //initialRoute: 'Dawini',
       routes: {
         'debug': (context) => const ImportDoctorsDebugScreen(),
         'Dawini': (context) => const RoleSelectionView(),

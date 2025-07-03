@@ -105,19 +105,26 @@ class _DoctorProfileViewState extends State<DoctorProfileView> {
       context: context,
       builder:
           (c) => AlertDialog(
-            title: const Text('حذف الحساب'),
+            backgroundColor: AppColors.darkBackground,
+            title: const Text(
+              'حذف الحساب',
+              style: const TextStyle(color: Colors.white),
+            ),
             content: const Text(
-              'هل أنت متأكد من حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء.',
-              textDirection: TextDirection.rtl,
+              'هل أنت متأكد أنك تريد حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء.',
+              style: const TextStyle(color: Colors.white70),
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(c, false),
-                child: const Text('إلغاء'),
+                onPressed: () => Navigator.of(c).pop(false),
+                child: const Text(
+                  'إلغاء',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
               TextButton(
-                onPressed: () => Navigator.pop(c, true),
-                child: const Text('حذف'),
+                onPressed: () => Navigator.of(c).pop(true),
+                child: const Text('حذف', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -203,6 +210,7 @@ class _DoctorProfileViewState extends State<DoctorProfileView> {
       backgroundColor: AppColors.darkBackground,
       appBar: AppBar(
         backgroundColor: AppColors.darkBackground,
+        automaticallyImplyLeading: false,
         elevation: 0,
         actions: [
           IconButton(

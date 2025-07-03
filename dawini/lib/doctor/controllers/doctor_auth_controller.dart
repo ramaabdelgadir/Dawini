@@ -24,14 +24,17 @@ class DoctorAuthController {
         );
         Navigator.of(
           context,
-        ).pushNamedAndRemoveUntil('Dawini/Doctor/Login', (route) => false);
-        await Future.delayed(Duration(milliseconds: 100));
-
+        ).pushNamedAndRemoveUntil('Dawini/Doctor/Login', (_) => false);
         await FirebaseAuth.instance.signOut();
         return;
       }
 
-      Navigator.of(context).pushNamed('Dawini/Doctor/Profile');
+      if (!context.mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        'Dawini/Doctor/Profile',
+        (_) => false,
+      );
     } on FirebaseAuthException catch (e) {
       _showError(context, _translateError(e.code));
     }
@@ -59,30 +62,32 @@ class DoctorAuthController {
         specialization: specialization,
         linkedinUrl: linkedinUrl,
       );
-      if (context.mounted) {
-        Navigator.pushNamed(context, 'Dawini/Doctor/Profile');
-      }
+
+      if (!context.mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        'Dawini/Doctor/Profile',
+        (_) => false,
+      );
     } on FirebaseAuthException catch (e) {
       if (context.mounted) _showError(context, _translateError(e.code));
     }
   }
 
   Future<void> logout(BuildContext context) async {
-    if (context.mounted) {
-      Navigator.pushNamed(context, 'Dawini/Doctor/Login');
-    }
     try {
       await _model.logOut();
-    } catch (_) {}
+    } catch (_) {
+    } finally {
+      if (context.mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, 'Dawini', (_) => false);
+      }
+    }
   }
 
   Future<void> deleteAccount(BuildContext context) async {
     if (context.mounted) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        'Dawini/Doctor/Login',
-        (_) => false,
-      );
+      Navigator.pushNamedAndRemoveUntil(context, 'Dawini', (_) => false);
     }
     await _model.deleteAccount();
   }
@@ -93,18 +98,17 @@ class DoctorAuthController {
     return null;
   }
 
-  Future<void> updateDoctorProfile({required DoctorCloudModel initial}) async {
-    await _model.updateProfile(
-      uid: initial.uid,
-      name: initial.name,
-      specialization: initial.specialization,
-      phone: initial.phone,
-      address: initial.address,
-      city: initial.city,
-      linkedinUrl: initial.linkedinUrl,
-      email: initial.email,
-    );
-  }
+  Future<void> updateDoctorProfile({required DoctorCloudModel initial}) async =>
+      _model.updateProfile(
+        uid: initial.uid,
+        name: initial.name,
+        specialization: initial.specialization,
+        phone: initial.phone,
+        address: initial.address,
+        city: initial.city,
+        linkedinUrl: initial.linkedinUrl,
+        email: initial.email,
+      );
 
   Future<void> updatePassword(String newPassword) async =>
       _model.updatePassword(newPassword);
@@ -114,12 +118,13 @@ class DoctorAuthController {
       final doc =
           await FirebaseFirestore.instance.collection('doctors').doc(uid).get();
       if (!doc.exists) return false;
+
       final data = doc.data();
       final hasName = (data?['name'] as String?)?.trim().isNotEmpty ?? false;
-      final hasSpecialization =
+      final hasSpec =
           (data?['specialization'] as String?)?.trim().isNotEmpty ?? false;
       final hasEmail = (data?['email'] as String?)?.trim().isNotEmpty ?? false;
-      return hasName && hasSpecialization && hasEmail;
+      return hasName && hasSpec && hasEmail;
     } catch (_) {
       return false;
     }

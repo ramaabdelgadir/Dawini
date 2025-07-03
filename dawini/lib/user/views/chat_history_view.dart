@@ -1,8 +1,9 @@
 import 'dart:io';
-import 'package:dawini/theme/app_colors.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:dawini/theme/app_colors.dart';
 import 'package:dawini/user/controllers/chat_history_controller.dart';
+import 'package:dawini/user/controllers/chat_controller.dart';
 
 class ChatHistoryView extends StatefulWidget {
   const ChatHistoryView({super.key});
@@ -20,8 +21,7 @@ class ChatHistoryViewState extends State<ChatHistoryView> {
     _controller.loadChatHistory();
   }
 
-  /* ───────── حوار تأكيد عام ───────── */
-  Future<bool?> _showConfirmationDialog(String title, String content) {
+  Future<bool?> _confirm(String title, String content) {
     return showDialog<bool>(
       context: context,
       builder:
@@ -63,43 +63,71 @@ class ChatHistoryViewState extends State<ChatHistoryView> {
         backgroundColor: AppColors.darkBackground,
         child: Column(
           children: [
+            const SizedBox(height: 30),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 25.0,
-              ),
-              child: TextButton.icon(
-                style: TextButton.styleFrom(foregroundColor: Colors.white),
-                icon: const Icon(Icons.add, color: Colors.white),
-                label: const Text('إضافة محادثة جديدة'),
-                onPressed: () {
-                  Navigator.pushNamed(context, 'Dawini/User/ChatScreen');
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final newID = await ChatController().startNewChat();
+                  if (!context.mounted) return;
+                  Navigator.pushNamed(
+                    context,
+                    'Dawini/User/ChatScreen',
+                    arguments: newID,
+                  );
                 },
+                icon: const Icon(Icons.add, color: Colors.white, size: 20),
+                label: const Text(
+                  'إضافة محادثة جديدة',
+                  style: TextStyle(fontSize: 15, fontFamily: 'Jawadtaut'),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.darkPlum,
+                  foregroundColor: Colors.white,
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 10,
+                  ),
+                ),
               ),
             ),
-
+            const SizedBox(height: 10),
+            // list of chats ---------------------------------------------
             Expanded(
               child: ValueListenableBuilder(
                 valueListenable: _controller.chatHistoryNotifier,
                 builder: (context, chats, _) {
                   if (chats.isEmpty) {
                     return const Center(
-                      child: CircularProgressIndicator(color: AppColors.plum),
+                      child: CircularProgressIndicator(
+                        color: AppColors.darkPlum,
+                      ),
                     );
                   }
-
-                  return ListView.builder(
+                  return ListView.separated(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 12,
+                    ),
                     itemCount: chats.length,
+                    separatorBuilder:
+                        (_, __) => const Divider(
+                          color: Colors.white10,
+                          thickness: 0.2,
+                        ),
                     itemBuilder:
                         (context, index) => ChatTile(
                           chatTitle: 'محادثة ${index + 1}',
                           onDelete: () async {
-                            bool? confirmed = await _showConfirmationDialog(
+                            bool? ok = await _confirm(
                               'حذف المحادثة',
-                              'هل أنت متأكد أنك تريد حذف هذه المحادثة (محادثة ${index + 1})؟',
+                              'هل أنت متأكد أنك تريد حذف هذه المحادثة؟',
                             );
-                            if (confirmed == true)
-                              _controller.deleteChat(index);
+                            if (ok == true) _controller.deleteChat(index);
                           },
                           onTap: () {
                             String chatID = _controller.openChat(index);
@@ -114,28 +142,32 @@ class ChatHistoryViewState extends State<ChatHistoryView> {
                 },
               ),
             ),
-
+            // delete all -------------------------------------------------
             Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  style: TextButton.styleFrom(
-                    backgroundColor: const Color(0xFF302337),
-                    foregroundColor: const Color(0xFFd5d4d6),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  bool? ok = await _confirm(
+                    'حذف جميع المحادثات',
+                    'هل أنت متأكد أنك تريد حذف جميع المحادثات؟',
+                  );
+                  if (ok == true) _controller.deleteAllChats();
+                },
+                icon: const Icon(Icons.delete_forever, size: 20),
+                label: const Text(
+                  'حذف الكل',
+                  style: TextStyle(fontSize: 15, fontFamily: 'Jawadtaut'),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF38253C),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
                   ),
-                  icon: const Icon(
-                    Icons.delete_forever,
-                    color: Color(0xFFd5d4d6),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  label: const Text('حذف الكل'),
-                  onPressed: () async {
-                    bool? confirmed = await _showConfirmationDialog(
-                      'حذف جميع المحادثات',
-                      'هل أنت متأكد أنك تريد حذف جميع المحادثات؟',
-                    );
-                    if (confirmed == true) _controller.deleteAllChats();
-                  },
                 ),
               ),
             ),
@@ -169,7 +201,7 @@ class _ChatTileState extends State<ChatTile> {
   @override
   Widget build(BuildContext context) {
     bool isDesktop =
-        kIsWeb || (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+        kIsWeb || Platform.isWindows || Platform.isLinux || Platform.isMacOS;
 
     return GestureDetector(
       onLongPress: () {
@@ -182,18 +214,34 @@ class _ChatTileState extends State<ChatTile> {
       child: MouseRegion(
         onEnter: (_) => isDesktop ? setState(() => isHovered = true) : null,
         onExit: (_) => isDesktop ? setState(() => isHovered = false) : null,
-        child: ListTile(
-          title: Text(
-            widget.chatTitle,
-            style: const TextStyle(color: Colors.white),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.deepPurple,
+            borderRadius: BorderRadius.circular(12),
           ),
-          trailing:
-              (isDesktop && isHovered) || (!isDesktop && showDelete)
-                  ? IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.white),
-                    onPressed: widget.onDelete,
-                  )
-                  : null,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  widget.chatTitle,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'Din',
+                    fontSize: 16,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if ((isDesktop && isHovered) || (!isDesktop && showDelete))
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.white),
+                  onPressed: widget.onDelete,
+                ),
+            ],
+          ),
         ),
       ),
     );

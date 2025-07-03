@@ -127,7 +127,8 @@ class _RecommendedDoctorProfileViewState
       backgroundColor: AppColors.darkBackground,
       appBar: AppBar(
         backgroundColor: AppColors.darkBackground,
-
+        automaticallyImplyLeading: false,
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Directionality(

@@ -56,8 +56,9 @@ class _PatientReportsViewState extends State<PatientReportsView> {
 
   Future<void> _openPdf(String url) async {
     final uri = Uri.parse(url);
+    debugPrint('opening: $uri');
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      await launchUrl(uri, mode: LaunchMode.platformDefault);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

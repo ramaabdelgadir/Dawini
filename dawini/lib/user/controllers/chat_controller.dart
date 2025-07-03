@@ -10,10 +10,17 @@ class ChatController {
 
   final CloudController _cloudController = CloudController();
   final http.Client _client = http.Client();
-  final String apiBaseUrl =
-      'https://8000-dep-01jywqr3484cy10dx1gxz7mhha-d.cloudspaces.litng.ai';
+  final String _apiUrl =
+      'https://8000-dep-01jywqr3484cy10dx1gxz7mhha-d.cloudspaces.litng.ai/generate-answer/';
   final String _authToken = 'Bearer d8856783-7ef2-48eb-96eb-1114ca776e14';
 
+  /// Force‑create a brand‑new chat and return its ID.
+  Future<String> startNewChat() async {
+    await _cloudController.startNewChat(); // sets currentChatID
+    return _cloudController.currentChatID!;
+  }
+
+  /// Create a chat **only if** none exists yet; otherwise reuse current.
   Future<String> initializeChat() async {
     if (_cloudController.currentChatID == null) {
       await _cloudController.startNewChat();
@@ -34,16 +41,12 @@ class ChatController {
   }
 
   Future<String> getAIResponse(String userMessage) async {
-    final apiUrl = '$apiBaseUrl/generate-answer/';
     final userId = _cloudController.userID;
     final chatId = _cloudController.currentChatID;
 
-    if (chatId == null) {
-      return 'خطأ: لا يمكن تحديد المحادثة.';
-    }
+    if (chatId == null) return 'خطأ: لا يمكن تحديد المحادثة.';
 
     try {
-      // Fetch messages from Firestore (ordered by timestamp ascending)
       final messagesSnapshot =
           await FirebaseFirestore.instance
               .collection('users')
@@ -54,34 +57,37 @@ class ChatController {
               .orderBy('timestamp')
               .get();
 
-      final chatHistory = <Map<String, String>>[];
+      final chatHistory = <Map<String, String>>[
+        {
+          "role": "system",
+          "content":
+              "أنت روبوت دردشة طبي متخصص وذكي يُدعى ('داويني') مدعوم بالذكاء الاصطناعي وتعتمد إجاباتك على مصادر طبية موثوقة...",
+        },
+      ];
 
-      chatHistory.add({
-        'role': 'system',
-        'content':
-            'You are an expert artificial intelligence-based Arabic medical chatbot named Dawini depends on reliable medical knowledge to answer patient medical questions. Answer the last question sent by the user considering all previous chat history.',
-      });
+      final docs = messagesSnapshot.docs;
 
-      for (final doc in messagesSnapshot.docs) {
-        final data = doc.data();
+      for (int i = 0; i < docs.length; i++) {
+        final data = docs[i].data();
         final sender = (data['sender'] ?? '').toString().toLowerCase();
         final text = (data['text'] ?? '').toString().trim();
-
         if (text.isEmpty) continue;
 
+        final isLast = i == docs.length - 1;
+        final isUser = sender == "user";
+        final isDuplicate = text == userMessage;
+        if (isLast && isUser && isDuplicate) continue;
+
         chatHistory.add({
-          'role': sender == 'user' ? 'user' : 'assistant',
-          'content': text,
+          "role": isUser ? "user" : "assistant",
+          "content": text,
         });
       }
 
-      // Compose the request body
       final body = {'prompt': userMessage, 'chat_history': chatHistory};
 
-      print('Sending POST request to $apiUrl with body: $body');
-
       final response = await _client.post(
-        Uri.parse(apiUrl),
+        Uri.parse(_apiUrl),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': _authToken,
@@ -89,18 +95,13 @@ class ChatController {
         body: jsonEncode(body),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
         return data['answer']?.toString() ?? 'حدث خطأ في تلقي الرد.';
       } else {
         return 'حدث خطأ في الاتصال: ${response.statusCode}';
       }
-    } catch (e, stack) {
-      print('Error calling AI API: $e');
-      print(stack);
+    } catch (e) {
       return 'حدث خطأ أثناء الاتصال بالذكاء الاصطناعي:\n$e';
     }
   }

@@ -23,16 +23,17 @@ class UserAuthController {
         );
         Navigator.of(
           context,
-        ).pushNamedAndRemoveUntil('Dawini/User/Login', (route) => false);
-        await Future.delayed(Duration(milliseconds: 100));
-
+        ).pushNamedAndRemoveUntil('Dawini/User/Login', (_) => false);
         await FirebaseAuth.instance.signOut();
         return;
       }
 
-      if (context.mounted) {
-        Navigator.pushNamed(context, 'Dawini/User/ChatScreen');
-      }
+      if (!context.mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        'Dawini/User/ChatScreen',
+        (_) => false,
+      );
     } on FirebaseAuthException catch (e) {
       if (context.mounted) _showError(context, _translateError(e.code));
     } catch (_) {
@@ -48,9 +49,13 @@ class UserAuthController {
   ) async {
     try {
       await _authModel.signUp(email, password, name);
-      if (context.mounted) {
-        Navigator.pushNamed(context, 'Dawini/User/ChatScreen');
-      }
+      if (!context.mounted) return;
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        'Dawini/User/ChatScreen',
+        (_) => false,
+      );
     } on FirebaseAuthException catch (e) {
       if (context.mounted) _showError(context, _translateError(e.code));
     } catch (_) {
@@ -65,6 +70,10 @@ class UserAuthController {
       if (context.mounted) _showError(context, _translateError(e.code));
     } catch (_) {
       if (context.mounted) _showError(context, 'حدث خطأ أثناء تسجيل الخروج');
+    } finally {
+      if (context.mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, 'Dawini', (_) => false);
+      }
     }
   }
 
@@ -139,15 +148,13 @@ class UserAuthController {
     try {
       final snapshot =
           await FirebaseFirestore.instance.collection('users').doc(uid).get();
-
       if (!snapshot.exists) return false;
 
       final data = snapshot.data();
       final hasName = (data?['name'] as String?)?.trim().isNotEmpty ?? false;
       final hasEmail = (data?['email'] as String?)?.trim().isNotEmpty ?? false;
-
       return hasName && hasEmail;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }

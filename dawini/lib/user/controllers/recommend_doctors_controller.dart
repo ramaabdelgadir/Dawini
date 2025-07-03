@@ -15,6 +15,8 @@ class RecommendDoctorsController {
       'https://8000-dep-01jywqr3484cy10dx1gxz7mhha-d.cloudspaces.litng.ai/generate-report/';
   static const String _recommendApi =
       'https://8000-dep-01jywqr3484cy10dx1gxz7mhha-d.cloudspaces.litng.ai/recommend-doctor/';
+  final String _authToken = 'Bearer d8856783-7ef2-48eb-96eb-1114ca776e14';
+  final http.Client _client = http.Client();
 
   static final RecommendDoctorsController _instance =
       RecommendDoctorsController._internal();
@@ -45,26 +47,36 @@ class RecommendDoctorsController {
     if (uid == null) throw Exception('User not logged in');
 
     final userSnap = await _fire.collection('users').doc(uid).get();
-    final userName = userSnap.data()?['name'] ?? 'User';
-    final genderCode =
-        (form.gender == 'ذكر' || form.gender.toUpperCase() == 'M') ? 'M' : 'F';
+    final userName = (userSnap.data()?['name'] ?? 'User').toString().trim();
+
+    String _clean(String? v, [String def = '']) =>
+        (v ?? '').trim().isEmpty ? def : v!.trim();
 
     final info = [
-      userName,
-      form.age,
-      genderCode,
-      form.ethnicity,
-      form.residence,
-      form.weight,
-      form.height,
-      form.caseDetails,
+      _clean(userName, 'Unknown'),
+      _clean(form.age, '0'),
+      (form.gender == 'ذكر' || form.gender.toUpperCase() == 'M') ? 'M' : 'F',
+      _clean(form.ethnicity, 'Unknown'),
+      _clean(form.residence, 'Unknown'),
+      _clean(form.weight, '0'),
+      _clean(form.height, '0'),
+      _clean(form.caseDetails, 'No details'),
     ];
 
-    final res = await http.post(
+    print('INFO ARRAY (${info.length} items): $info');
+
+    final res = await _client.post(
       Uri.parse(_reportApi),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': _authToken,
+      },
       body: jsonEncode({'info': info}),
     );
+
+    print('Response status: ${res.statusCode}');
+    print('Response body: ${res.body}');
+
     if (res.statusCode != 200) {
       throw Exception('API error (report): ${res.body}');
     }
@@ -83,24 +95,23 @@ class RecommendDoctorsController {
   }
 
   Future<List<DoctorCloudModel>> recommendByCase(String caseDetail) async {
-    final res = await http.post(
+    final res = await _client.post(
       Uri.parse(_recommendApi),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': _authToken,
+      },
       body: jsonEncode({'case': caseDetail}),
     );
-    if (res.statusCode != 200) {
+    print('Response status: ${res.statusCode}');
+    print('Response body: ${res.body}');
+    if (res.statusCode != 200)
       throw Exception('API error (recommend): ${res.body}');
-    }
-
-    final decoded = jsonDecode(res.body);
-    final specialization = decoded['specialization'] as String?;
-    if (specialization == null || specialization.isEmpty) {
-      throw Exception('Invalid specialization from API');
-    }
-
-    _recommendedClass = specialization;
-    await getDoctorsByClass(specialization);
-
+    final recommendation =
+        (jsonDecode(res.body)['recommendation'] ?? '') as String;
+    if (recommendation.isEmpty) throw Exception('Empty recommendation');
+    _recommendedClass = recommendation;
+    await getDoctorsByClass(recommendation);
     return _recommendedDoctors;
   }
 

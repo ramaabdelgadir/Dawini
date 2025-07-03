@@ -57,7 +57,7 @@ class _RecommendedDoctorsViewState extends State<RecommendedDoctorsView> {
     }
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
-      _showSnack('لا يمكن الوصول إلى موقعك', bg: Colors.redAccent);
+      _showSnack('لا يمكن الوصول إلى موقعك', bg: AppColors.plum);
       return;
     }
 
@@ -142,7 +142,10 @@ class _RecommendedDoctorsViewState extends State<RecommendedDoctorsView> {
                         leading: const CircleAvatar(
                           radius: 28,
                           backgroundColor: AppColors.plum,
-                          child: Icon(Icons.person, color: Colors.white),
+                          child: Icon(
+                            Icons.medical_services,
+                            color: Colors.white,
+                          ),
                         ),
                         title: Text(
                           doc.name,

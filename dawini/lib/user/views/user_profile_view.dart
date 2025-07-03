@@ -90,18 +90,29 @@ class UserProfileViewState extends State<UserProfileView> {
           (c) => Directionality(
             textDirection: TextDirection.rtl,
             child: AlertDialog(
-              title: const Text('حذف الحساب'),
+              backgroundColor: AppColors.darkBackground,
+              title: const Text(
+                'حذف الحساب',
+                style: const TextStyle(color: Colors.white),
+              ),
               content: const Text(
                 'هل أنت متأكد أنك تريد حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء.',
+                style: const TextStyle(color: Colors.white70),
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(c).pop(false),
-                  child: const Text('إلغاء'),
+                  child: const Text(
+                    'إلغاء',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(c).pop(true),
-                  child: const Text('حذف'),
+                  child: const Text(
+                    'حذف',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             ),
