@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart'; // NEW
 import 'package:dawini/theme/app_colors.dart';
 import 'package:dawini/doctor/models/doctor_cloud_model.dart';
 import 'package:dawini/user/controllers/recommend_doctors_controller.dart';
@@ -17,23 +18,42 @@ class _RecommendedDoctorProfileViewState
   final _controller = RecommendDoctorsController();
   bool _sending = false;
 
-  Future<void> _handleSendReport() async {
-    setState(() => _sending = true);
-    try {
-      await _controller.sendReportToDoctor(widget.doctor.uid);
-      if (!mounted) return;
+  Future<void> _openMap(double lat, double lng, String label) async {
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$lat,$lng'
+      '&query_place_id=${Uri.encodeComponent(label)}',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'تم إرسال التقرير للطبيب بنجاح',
-            textDirection: TextDirection.rtl,
-          ),
+          content: Text('تعذّر فتح الخريطة'),
           backgroundColor: AppColors.plum,
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleSendReport() async {
+    setState(() => _sending = true);
+    try {
+      await _controller.sendReportToDoctor(widget.doctor.uid);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'تم إرسال التقرير للطبيب بنجاح',
+            textDirection: TextDirection.rtl,
+          ),
+          backgroundColor: AppColors.plum,
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         ),
       );
     } catch (e) {
@@ -47,9 +67,6 @@ class _RecommendedDoctorProfileViewState
           backgroundColor: AppColors.plum,
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
         ),
       );
     } finally {
@@ -61,6 +78,7 @@ class _RecommendedDoctorProfileViewState
     required IconData icon,
     required String label,
     required String value,
+    VoidCallback? onTrailingTap,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -77,7 +95,6 @@ class _RecommendedDoctorProfileViewState
         ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: AppColors.plumPurple, size: 19),
           const SizedBox(width: 7),
@@ -101,6 +118,16 @@ class _RecommendedDoctorProfileViewState
               ),
             ),
           ),
+          if (onTrailingTap != null)
+            IconButton(
+              icon: const Icon(
+                Icons.location_on,
+                color: AppColors.orchidPink,
+                size: 22,
+              ),
+              splashRadius: 22,
+              onPressed: onTrailingTap,
+            ),
         ],
       ),
     );
@@ -193,9 +220,15 @@ class _RecommendedDoctorProfileViewState
                 value: doctor.specialization,
               ),
               _infoTile(
-                icon: Icons.location_on,
+                icon: Icons.location_history,
                 label: 'العنوان',
                 value: doctor.address,
+                onTrailingTap:
+                    () => _openMap(
+                      doctor.latitude,
+                      doctor.longitude,
+                      doctor.name,
+                    ),
               ),
               _infoTile(
                 icon: Icons.location_city,

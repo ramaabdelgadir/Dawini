@@ -1,10 +1,3 @@
-// lib/debug/import_doctors_debug.dart
-//
-// One‑time screen to import doctors.xlsx from assets into
-// Firebase Auth + Firestore, using Arabic column headers
-// and a 15‑second delay between rows.
-
-import 'dart:typed_data';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -21,15 +14,12 @@ class ImportDoctorsDebugScreen extends StatefulWidget {
 }
 
 class _ImportDoctorsDebugScreenState extends State<ImportDoctorsDebugScreen> {
-  /* ───────── config ───────── */
-  final bool _verbose = true; // flip to false to silence console
+  final bool _verbose = true;
   static const int _delayPerRowSec = 40;
 
-  /* ───────── UI state ───────── */
   bool _isImporting = false;
   int _currentRow = 0;
 
-  /* ───────── alias: Arabic header → canonical key ───────── */
   static const Map<String, String> _headerAlias = {
     'الاسم': 'name',
     'العنوان': 'address',
@@ -44,7 +34,6 @@ class _ImportDoctorsDebugScreenState extends State<ImportDoctorsDebugScreen> {
     'البريد الالكتروني': 'email',
   };
 
-  /* ───────── helpers ───────── */
   void _log(Object? m) {
     if (_verbose) debugPrint('$m');
   }
@@ -71,7 +60,6 @@ class _ImportDoctorsDebugScreenState extends State<ImportDoctorsDebugScreen> {
     );
   }
 
-  /* ───────── import logic ───────── */
   Future<void> _importDoctors() async {
     setState(() {
       _isImporting = true;
@@ -81,7 +69,6 @@ class _ImportDoctorsDebugScreenState extends State<ImportDoctorsDebugScreen> {
     int ok = 0, skip = 0, fail = 0;
 
     try {
-      // 1) load Excel from assets
       final bytes =
           (await rootBundle.load(
             'assets/images/doctors.xlsx',
@@ -89,13 +76,12 @@ class _ImportDoctorsDebugScreenState extends State<ImportDoctorsDebugScreen> {
       final sheet = Excel.decodeBytes(bytes).tables['data22'];
       if (sheet == null) throw Exception('لا توجد ورقة باسم Sheet1 في الملف.');
 
-      // 2) build header map (canonical key → column index)
       final Map<String, int> col = {};
       final headerRow = sheet.row(0);
       for (int c = 0; c < headerRow.length; c++) {
         final raw = headerRow[c]?.value?.toString().trim() ?? '';
         if (raw.isEmpty) continue;
-        final key = _headerAlias[raw] ?? raw; // alias or original
+        final key = _headerAlias[raw] ?? raw;
         col[key.toLowerCase()] = c;
       }
 
@@ -105,12 +91,10 @@ class _ImportDoctorsDebugScreenState extends State<ImportDoctorsDebugScreen> {
         );
       }
 
-      // 3) Firebase handles
       final auth = FirebaseAuth.instance;
       final fs = FirebaseFirestore.instance;
-      // 👇 Adjust these manually each time
-      const int startRow = 401; // row number in Excel (1-based)
-      const int endRow = 402; // inclusive, e.g. rows 1 → 90
+      const int startRow = 401;
+      const int endRow = 402;
 
       for (int r = startRow; r <= endRow && r < sheet.maxRows; r++) {
         setState(() => _currentRow = r);
@@ -168,7 +152,6 @@ class _ImportDoctorsDebugScreenState extends State<ImportDoctorsDebugScreen> {
           fail++;
         }
 
-        // 5) wait before next iteration
         await Future.delayed(const Duration(seconds: _delayPerRowSec));
       }
 
@@ -180,7 +163,6 @@ class _ImportDoctorsDebugScreenState extends State<ImportDoctorsDebugScreen> {
     }
   }
 
-  /* ───────── UI ───────── */
   @override
   Widget build(BuildContext context) {
     final btn = ElevatedButton(

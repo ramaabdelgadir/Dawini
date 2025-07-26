@@ -14,13 +14,11 @@ class ChatController {
       'https://8000-dep-01jywqr3484cy10dx1gxz7mhha-d.cloudspaces.litng.ai/generate-answer/';
   final String _authToken = 'Bearer d8856783-7ef2-48eb-96eb-1114ca776e14';
 
-  /// Force‑create a brand‑new chat and return its ID.
   Future<String> startNewChat() async {
-    await _cloudController.startNewChat(); // sets currentChatID
+    await _cloudController.startNewChat();
     return _cloudController.currentChatID!;
   }
 
-  /// Create a chat **only if** none exists yet; otherwise reuse current.
   Future<String> initializeChat() async {
     if (_cloudController.currentChatID == null) {
       await _cloudController.startNewChat();
@@ -61,7 +59,7 @@ class ChatController {
         {
           "role": "system",
           "content":
-              "أنت روبوت دردشة طبي متخصص وذكي يُدعى ('داويني') مدعوم بالذكاء الاصطناعي وتعتمد إجاباتك على مصادر طبية موثوقة...",
+              "أنت روبوت دردشة طبي متخصص وذكي يُدعى ( 'داويني ')، مدعوم بالذكاء الاصطناعي، وتعتمد إجاباتك على معلومات طبية موثوقة. مهمتك هي فهم وتحليل السؤال الطبي المُرسل من المستخدم، ثم تقديم إجابة واضحة، مفيدة، وآمنة طبياً. احرص دائماً على: تقديم معلومات موثوقة بلغة مبسطة يفهمها المريض. التنبيه إلى ضرورة مراجعة الطبيب عند الحاجة.  إذا بدأ المستخدم الرسالة بتحية أو رسالة قصيرة مثل  'السلام عليكم ' أو  'مرحباً '، فابدأ برد مهذب وقصير فقط دون زيادة, أجب عن آخر سؤال طبي طرحه المستخدم مع مراعاة جميع الرسائل السابقة في المحادثة.",
         },
       ];
 
