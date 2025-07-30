@@ -82,7 +82,7 @@ Explore Dawini's user interface through key screens from both patient and doctor
 ---
 ## 📂 Project Structure
 `dawini/`
-👉 [View Full the code files outline](dawini\lib\Structure.md)
+👉 [View Full the code files outline](dawini/README.md)
 
 ---
 
